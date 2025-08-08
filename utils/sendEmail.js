@@ -1,8 +1,12 @@
 import nodemailer from "nodemailer";
 
-// Sends an email to a user with given subject and HTML content
 const sendEmail = async (to, subject, html) => {
-  // Set up Gmail transporter using credentials from .env
+  console.log("Sending email to:", to);
+
+  if (!to || typeof to !== "string" || to.trim() === "") {
+    throw new Error("Recipient email is missing");
+  }
+
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -11,7 +15,6 @@ const sendEmail = async (to, subject, html) => {
     },
   });
 
-  // Define email details
   const mailOptions = {
     from: `"Byway" <${process.env.EMAIL_USER}>`,
     to,
@@ -19,7 +22,6 @@ const sendEmail = async (to, subject, html) => {
     html,
   };
 
-  // Send the email
   await transporter.sendMail(mailOptions);
 };
 
