@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import authRouter from "./routes/auth.route.js";
 import connectDB from "./config/db.js";
+import orderRoutes from "./routes/order.route.js"
 
 dotenv.config();
 const app = express();
@@ -13,6 +14,8 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the LMS Backend API" });
 });
 app.use('/api/auth', authRouter);
+app.use('/api/orders', orderRoutes);
+
 
 const PORT = process.env.PORT || 3000;
 

@@ -1,4 +1,4 @@
-import User from "../models/users.model";
+import User from "../models/users.model.js";
 
 export const verifyToken = async (req, res, next) => {
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
