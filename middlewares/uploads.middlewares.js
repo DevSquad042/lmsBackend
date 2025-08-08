@@ -1,10 +1,12 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 // Ensure upload folders exist
 const createFolder = (folderPath) => {
-  if (!fs.existsSync(folderPath)) fs.mkdirSync(folderPath, { recursive: true });
+  if (!fs.existsSync(folderPath)) {
+    fs.mkdirSync(folderPath, { recursive: true });
+  }
 };
 
 createFolder('uploads/thumbnails');
@@ -18,9 +20,10 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const ext = path.extname(file.originalname);
-    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
+    const uniqueName =
+      Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
     cb(null, uniqueName);
-  }
+  },
 });
 
 // File type filter
@@ -40,7 +43,7 @@ const fileFilter = (req, file, cb) => {
 
 // File size limits (image: 2MB, video: 100MB)
 const limits = {
-  fileSize: 100 * 1024 * 1024 // 100MB max per file
+  fileSize: 100 * 1024 * 1024, // 100MB max per file
 };
 
-module.exports = multer({ storage, fileFilter, limits });
+export default multer({ storage, fileFilter, limits });

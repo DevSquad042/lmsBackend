@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import upload from '../middleware/uploads.middlewares.js';
+import * as courseController from '../controllers/course.controller.js';
+
 const router = express.Router();
-const upload = require('../middleware/uploads.middlewares.js');
-const courseController = require('../controllers/course.controller.js');
 
 // POST: Create course (thumbnail + multiple section videos)
 router.post(
@@ -41,4 +42,4 @@ router.get('/:id', courseController.getCourseById);
 router.put('/:id', courseController.updateCourse);
 router.delete('/:id', courseController.deleteCourse);
 
-module.exports = router;
+export default router;

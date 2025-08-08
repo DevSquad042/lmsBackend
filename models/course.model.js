@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
 
 const sectionSchema = new mongoose.Schema({
   title: {
@@ -48,6 +48,7 @@ const courseSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
+}, { timestamps: true });
 
-module.exports = mongoose.model('Course', courseSchema);
+const Course = mongoose.model("Course", courseSchema);
+export default Course;
