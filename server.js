@@ -3,8 +3,8 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import authRouter from "./routes/auth.route.js";
 import connectDB from "./config/db.js";
-import orderRoutes from "./routes/order.route.js"
-
+import orderRoutes from "./routes/order.route.js";
+import courseRoutes from "./routes/course.route.js"
 dotenv.config();
 const app = express();
 
@@ -15,8 +15,7 @@ app.get("/", (req, res) => {
 });
 app.use('/api/auth', authRouter);
 app.use('/api/orders', orderRoutes);
-
-
+app.use('/api/courses', courseRoutes)
 const PORT = process.env.PORT || 3000;
 
 connectDB();
