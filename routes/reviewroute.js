@@ -4,3 +4,5 @@ import {rating} from "../controllers/auth/reviewcontroller.js";
 const reviewrouter = express.Router();
 
 reviewrouter.put("/rating", rating);
+
+export default reviewrouter;

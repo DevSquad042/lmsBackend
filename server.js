@@ -7,6 +7,7 @@ import orderRoutes from "./routes/order.route.js";
 import courseRoutes from "./routes/course.route.js"
 import cartRouter from "./routes/cart.route.js";
 import cookieParser from 'cookie-parser';
+import reviewrouter from "./routes/reviewroute.js"
 
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/orders', orderRoutes);
 app.use('/api/courses', courseRoutes)
 app.use('/api/cart', cartRouter);
+app.use('/api/rating', reviewrouter);
 const PORT = process.env.PORT;
 
 connectDB();
