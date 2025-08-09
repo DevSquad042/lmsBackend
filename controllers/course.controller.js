@@ -1,7 +1,7 @@
-const Course = require('../models/course.model.js');
+import Course from "../models/course.model.js";
 
 // Create course with optional sections + videos
-exports.createCourse = async (req, res) => {
+export const createCourse = async (req, res) => {
   try {
     const { title, description, instructor, price, categories, tags, sections } = req.body;
 
@@ -43,7 +43,8 @@ exports.createCourse = async (req, res) => {
   }
 };
 
-exports.getAllCourses = async (req, res) => {
+// Get all courses
+export const getAllCourses = async (req, res) => {
   try {
     const courses = await Course.find().sort({ createdAt: -1 }); // Newest first
     res.status(200).json(courses);
@@ -52,7 +53,8 @@ exports.getAllCourses = async (req, res) => {
   }
 };
 
-exports.getCourseById = async (req, res) => {
+// Get course by ID
+export const getCourseById = async (req, res) => {
   try {
     const course = await Course.findById(req.params.id);
     if (!course) {
@@ -64,7 +66,8 @@ exports.getCourseById = async (req, res) => {
   }
 };
 
-exports.getCourseByTitle = async (req, res) => {
+// Get course by title
+export const getCourseByTitle = async (req, res) => {
   try {
     const title = req.params.title;
     const course = await Course.findOne({
@@ -79,7 +82,8 @@ exports.getCourseByTitle = async (req, res) => {
   }
 };
 
-exports.updateCourse = async (req, res) => {
+// Update course
+export const updateCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
     const updates = req.body;
@@ -105,7 +109,8 @@ exports.updateCourse = async (req, res) => {
   }
 };
 
-exports.deleteCourse = async (req, res) => {
+// Delete course
+export const deleteCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
     const deleted = await Course.findByIdAndDelete(courseId);
@@ -120,7 +125,7 @@ exports.deleteCourse = async (req, res) => {
 };
 
 // Add a new section to a course
-exports.addSection = async (req, res) => {
+export const addSection = async (req, res) => {
   try {
     const { courseId } = req.params;
     const { title } = req.body;
@@ -135,14 +140,13 @@ exports.addSection = async (req, res) => {
     await course.save();
 
     res.status(200).json({ message: 'Section added', course });
-
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
 
 // Remove a section by index
-exports.removeSection = async (req, res) => {
+export const removeSection = async (req, res) => {
   try {
     const { courseId, index } = req.params;
 
@@ -159,7 +163,7 @@ exports.removeSection = async (req, res) => {
 };
 
 // Update a section (title or video)
-exports.updateSection = async (req, res) => {
+export const updateSection = async (req, res) => {
   try {
     const { courseId, index } = req.params;
     const { title } = req.body;
@@ -177,5 +181,3 @@ exports.updateSection = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-const mongoose = require('mongoose');
