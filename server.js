@@ -23,7 +23,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/orders', orderRoutes);
 app.use('/api/courses', courseRoutes)
 app.use('/api/cart', cartRouter);
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 connectDB();
 app.listen(PORT, () => {

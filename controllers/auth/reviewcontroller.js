@@ -1,6 +1,6 @@
 import expressAsyncHandlerx from "express-async-handler";
 
-export const rating = expressAsyncHandler( async(req, res) => {
+export const rating = expressAsyncHandlerx( async(req, res) => {
     const {_id} = req.user;
     try {
         const { star, prodId} = req.body;
