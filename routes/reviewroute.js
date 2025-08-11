@@ -1,8 +1,21 @@
 import express from 'express';
-import {rating} from "../controllers/auth/reviewcontroller.js";
+import { verifyToken } from '../middlewares/verifyToken.middleware.js';
+import Review from "../models/review.model.js"
+import { createReview, getReviews, averageRating } from '../controllers/reviewcontroller.js';
 
-const reviewrouter = express.Router();
 
-reviewrouter.put("/rating", rating);
+const reviewRouter = express.Router();
 
-export default reviewrouter;
+
+// Create a review
+reviewRouter.post('/rating', createReview)
+
+// Get all reviews for a course
+reviewRouter.get('/course/:courseId', getReviews)
+
+
+// Get average rating for a course
+reviewRouter.get('/course/:courseId/average', averageRating )
+  
+export default reviewRouter;
+

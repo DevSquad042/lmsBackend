@@ -24,7 +24,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/orders', orderRoutes);
 app.use('/api/courses', courseRoutes)
 app.use('/api/cart', cartRouter);
-app.use('/api/rating', reviewrouter);
+app.use('/api/review', reviewrouter);
 const PORT = process.env.PORT;
 
 connectDB();
