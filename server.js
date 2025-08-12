@@ -7,7 +7,7 @@ import orderRoutes from "./routes/order.route.js";
 import courseRoutes from "./routes/course.route.js"
 import cartRouter from "./routes/cart.route.js";
 import cookieParser from 'cookie-parser';
-import reviewrouter from "./routes/reviewroute.js"
+import reviewrouter from "./routes/review.route.js"
 
 
 dotenv.config();
