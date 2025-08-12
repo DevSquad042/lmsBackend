@@ -88,7 +88,7 @@ import express from "express";
 export const getReviews = async (req, res) => {
   try {
     const reviews = await Review.find({ course: req.params.courseId })
-      .populate('user', 'course')
+      .populate('userId', 'courseId')
       .sort({ createdAt: -1 });
     res.json(reviews);
   } catch (error) {
