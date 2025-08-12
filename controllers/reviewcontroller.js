@@ -60,19 +60,24 @@ import express from "express";
 
   export const createReview = async (req, res) => {
   try {
-    const { course, user, rating, comment } = req.body;
+    const { courseId, userId, rating, comment } = req.body;
 
     // Validate input
-    if (!course || !user || !rating || !comment) {
+    if (!courseId || !userId || !rating || !comment) {
       return res.status(400).json({ message: 'All fields are required' });
     }
     if (rating < 1 || rating > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
 
-    const review = new Review({ course, user, rating, comment });
+    const review = new Review({ courseId, userId, rating, comment });
     await review.save();
-    res.status(201).json(review);
+    res.status(201).json({
+      status: 'success',
+      data: {
+        review: review
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
