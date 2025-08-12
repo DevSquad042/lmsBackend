@@ -8,14 +8,14 @@ const reviewRouter = express.Router();
 
 
 // Create a review
-reviewRouter.post('/rating', createReview)
+reviewRouter.post('/addReview', createReview)
 
 // Get all reviews for a course
-reviewRouter.get('/course/:courseId', getReviews)
+reviewRouter.get('/getReviews', getReviews)
 
 
 // Get average rating for a course
-reviewRouter.get('/course/:courseId/average', averageRating )
+reviewRouter.get('/averageRating', averageRating )
   
 export default reviewRouter;
 

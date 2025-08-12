@@ -1,7 +1,7 @@
-// import expressAsyncHandlerx from "express-async-handler";
-import mongoose from "mongoose";
+ import mongoose from "mongoose";
 import Course from "../models/course.model.js";
 import Review from "../models/review.model.js";
+import express from "express";
 
 
 // export const rating = expressAsyncHandlerx( async(req, res) => {
@@ -60,17 +60,17 @@ import Review from "../models/review.model.js";
 
   export const createReview = async (req, res) => {
   try {
-    const { courseId, userId, rating, comment } = req.body;
+    const { course, user, rating, comment } = req.body;
 
     // Validate input
-    if (!courseId || !userId || !rating || !comment) {
+    if (!course || !user || !rating || !comment) {
       return res.status(400).json({ message: 'All fields are required' });
     }
     if (rating < 1 || rating > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
 
-    const review = new Review({ courseId, userId, rating, comment });
+    const review = new Review({ course, user, rating, comment });
     await review.save();
     res.status(201).json(review);
   } catch (error) {
@@ -82,8 +82,8 @@ import Review from "../models/review.model.js";
 
 export const getReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ courseId: req.params.courseId })
-      .populate('userId', 'name')
+    const reviews = await Review.find({ course: req.params.courseId })
+      .populate('user', 'course')
       .sort({ createdAt: -1 });
     res.json(reviews);
   } catch (error) {
@@ -94,13 +94,13 @@ export const getReviews = async (req, res) => {
 // Get average rating for a course
 export const averageRating = async (req, res) => {
   try {
-    const reviews = await Review.find({ courseId: req.params.courseId });
-    if (reviews.length === 0) {
+    const reviewsAvg = await Review.find({ course: req.params.courseId });
+    if (reviewsAvg.length === 0) {
       return res.json({ averageRating: 0, totalReviews: 0 });
     }
-    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
-    const averageRating = (totalRating / reviews.length).toFixed(1);
-    res.json({ averageRating, totalReviews: reviews.length });
+    const totalRating = reviewsAvg.reduce((sum, review) => sum + review.rating, 0);
+    const averageRating = (totalRating / reviewsAvg.length).toFixed(1);
+    res.json({ averageRating, totalReviews: reviewsAvg.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
