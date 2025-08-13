@@ -25,10 +25,10 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/courses', courseRoutes)
 app.use('/api/cart', cartRouter);
 app.use('/api/review', reviewrouter);
+app.use('/api/enrollments', enrollmentRoutes);
 const PORT = process.env.PORT;
 
 connectDB();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-
