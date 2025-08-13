@@ -1,6 +1,5 @@
 import express from 'express';
 import { verifyToken } from '../middlewares/verifyToken.middleware.js';
-import Review from "../models/review.model.js"
 import { createReview, getReviews, averageRating } from '../controllers/reviewcontroller.js';
 
 
