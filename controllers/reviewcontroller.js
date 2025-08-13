@@ -70,6 +70,15 @@ import express from "express";
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
 
+    // Count how many reviews user already has for this course
+    const reviewCount = await Review.countDocuments({ userId, courseId });
+
+    if (reviewCount >= 2) {
+      return res.status(400).json({
+        message: "You have already reviewed this course twice."
+      });
+    }
+
     const review = new Review({ courseId, userId, rating, comment });
     await review.save();
     res.status(201).json({
