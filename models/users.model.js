@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
 
     lastName: {
         type: String,
-        required: true,
+        required: true, 
         trim: true
     },
     email: {
@@ -46,6 +46,11 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
     verificationExpires: Date,
+    resetToken: {
+        type: String,
+    },
+    resetTokenExpires: Date,
+
 
 }, {timestamps: true})
 

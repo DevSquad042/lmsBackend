@@ -28,7 +28,13 @@ import path from "path";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import connectDB from "./config/db.js";
-import courseRoutes from "./routes/courseRoutes.js";
+import orderRoutes from "./routes/order.route.js";
+import courseRoutes from "./routes/course.route.js"
+import cartRouter from "./routes/cart.route.js";
+import cookieParser from 'cookie-parser';
+import reviewrouter from "./routes/reviewroute.js";
+import enrollmentRoutes from './routes/enrollment.routes.js';
+
 
 // Load environment variables
 dotenv.config();
@@ -57,10 +63,15 @@ app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the LMS Backend API" });
 });
 
-app.use("/api/courses", courseRoutes); // Course routes mounted here
-
-// Port
-const PORT = process.env.PORT || 3000;
+app.use(cookieParser());
+app.use('/api/auth', authRouter);
+app.use('/api/orders', orderRoutes);
+app.use('/api/courses', courseRoutes)
+app.use('/api/cart', cartRouter);
+app.use('/api/review', reviewrouter);
+app.use('/api/courses', courseRoutes);
+app.use('/api/enrollments', enrollmentRoutes);
+const PORT = process.env.PORT;
 
 // Start server
 app.listen(PORT, () => {
