@@ -105,6 +105,29 @@ export const getReviews = async (req, res) => {
   }
 };
 
+exports.updateReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body;
+    const { reviewId } = req.params;
+    const userId = req.user._id;
+che
+    const updatedReview = await Review.findOneAndUpdate(
+      { _id: reviewId, userId },
+      { rating, reviewText, updatedAt: Date.now() },
+      { new: true }
+    );
+
+    if (!updatedReview) {
+      return res.status(404).json({ message: "Review not found or not yours" });
+    }
+
+    res.json(updatedReview);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
 // Get average rating for a course
 export const averageRating = async (req, res) => {
   try {
