@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require('mongoose');
 
 const sectionSchema = new mongoose.Schema({
   title: {
@@ -6,16 +6,8 @@ const sectionSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  videoFile: {
-    type: String, // Uploaded video file name
-    default: ''
-  },
-  videoUrl: {
-    type: String, // YouTube link
-    default: ''
-  },
-  pdf: {
-    type: String, // Uploaded PDF file name
+  video: {
+    type: String, // Store file name or URL
     default: ''
   }
 });
@@ -51,8 +43,11 @@ const courseSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  sections: [sectionSchema],
-}, { timestamps: true });
+  sections: [sectionSchema], // 👈 Optional array of sections with video
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+}, Timestamps());
 
-const Course = mongoose.model("Course", courseSchema);
-export default Course;
+module.exports = mongoose.model('Course', courseSchema);
