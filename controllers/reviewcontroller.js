@@ -73,7 +73,7 @@ import express from "express";
     // Count how many reviews user already has for this course
     const reviewCount = await Review.countDocuments({ userId, courseId });
 
-    if (reviewCount >= 2) {
+    if (reviewCount >= 5) {
       return res.status(400).json({
         message: "You have already reviewed this course twice."
       });
@@ -105,15 +105,14 @@ export const getReviews = async (req, res) => {
   }
 };
 
-exports.updateReview = async (req, res) => {
+export const updateReview = async (req, res) => {
   try {
     const { rating, comment } = req.body;
     const { reviewId } = req.params;
     const userId = req.user._id;
-che
     const updatedReview = await Review.findOneAndUpdate(
-      { _id: reviewId, userId },
-      { rating, reviewText, updatedAt: Date.now() },
+      { _id: reviewIdrs},
+      { rating, comment, updatedAt: Date.now() },
       { new: true }
     );
 

@@ -6,11 +6,11 @@ import {
   deleteEnrollment
 } from '../controllers/enrollment.controller.js';
 
-const enrollmentRoutes = Router();
+const router = Router();
 
 router.post('/enroll', enrollUser);                // Enroll user to course
 router.get('/', getAllEnrollments);          // Get all enrollments
 router.get('/:id', getEnrollmentById);       // Get single enrollment by ID
 router.delete('/:id', deleteEnrollment);     // Delete enrollment
 
-export default enrollmentRoutes;
+export default router;
