@@ -10,7 +10,8 @@ import courseRoutes from "./routes/course.route.js";
 import cartRouter from "./routes/cart.route.js";
 import paymentRouter from "./routes/payment.route.js";
 import { paystackWebhook } from "./controllers/payment.controller.js";
-import connectDB from "./config/db.js";
+import connectDB from "./config/db.js";import reviewrouter from "./routes/reviewroute.js"
+
 
 dotenv.config();
 const app = express();
@@ -36,11 +37,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/orders', orderRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/cart', cartRouter);
-app.use('/api/payments', paymentRouter);
-
-
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 // --- Connect DB and start server ---
 connectDB();
