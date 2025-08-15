@@ -105,27 +105,73 @@ export const getReviews = async (req, res) => {
   }
 };
 
+// export const updateReview = async (req, res) => {
+//   try {
+//     const { rating, comment } = req.body;
+//     const { reviewId } = req.params;
+//     const userId = req.user._id;
+//     const updatedReview = await Review.findOneAndUpdate(
+//       { _id: reviewId, userId},
+//       { rating, comment, updatedAt: Date.now() },
+//       { new: true }
+//     );
+
+//     if (!updatedReview) {
+//       return res.status(404).json({ message: "Review not found or not yours" });
+//     }
+
+//     res.json(updatedReview);
+//   } catch (error) {
+//     res.status(500).json({ message: error.message });
+//   }
+// };
+
 export const updateReview = async (req, res) => {
   try {
-    const { rating, comment } = req.body;
     const { reviewId } = req.params;
-    const userId = req.user._id;
+    const userId = req.user._id; // from auth middleware
+    const { rating, comment } = req.body;
+
+    // Validate input
+    if (!rating && !comment) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a rating or comment to update"
+      });
+    }
+
+    // Find review & update only if it belongs to the logged-in user
     const updatedReview = await Review.findOneAndUpdate(
-      { _id: reviewIdrs},
-      { rating, comment, updatedAt: Date.now() },
-      { new: true }
+      { _id: reviewId, userId: userId },
+      {
+        ...(rating !== undefined && { rating }),
+        ...(comment !== undefined && { comment }),
+        updatedAt: Date.now()
+      },
+      { new: true, runValidators: true }
     );
 
     if (!updatedReview) {
-      return res.status(404).json({ message: "Review not found or not yours" });
+      return res.status(404).json({
+        success: false,
+        message: "Review not found or you don't have permission to update it"
+      });
     }
 
-    res.json(updatedReview);
+    res.status(200).json({
+      success: true,
+      message: "Review updated successfully",
+      review: updatedReview
+    });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error updating review:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating review"
+    });
   }
 };
-
 
 // Get average rating for a course
 export const averageRating = async (req, res) => {

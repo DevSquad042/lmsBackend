@@ -9,7 +9,7 @@ const reviewRouter = express.Router();
 
 // Create a review
 reviewRouter.post('/addReview',  verifyToken, createReview)
-reviewRouter.post('/updateReview', updateReview)
+reviewRouter.patch('/updateReview', updateReview)
 
 // Get all reviews for a course
 reviewRouter.get('/getReviews', getReviews)
