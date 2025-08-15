@@ -3,6 +3,12 @@ import dotenv from "dotenv";
 import morgan from "morgan";
 import authRouter from "./routes/auth.route.js";
 import connectDB from "./config/db.js";
+import orderRoutes from "./routes/order.route.js";
+import courseRoutes from "./routes/course.route.js"
+import cartRouter from "./routes/cart.route.js";
+import cookieParser from 'cookie-parser';
+import reviewrouter from "./routes/reviewroute.js"
+
 
 dotenv.config();
 const app = express();
@@ -12,9 +18,14 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the LMS Backend API" });
 });
-app.use('/api/auth', authRouter);
 
-const PORT = process.env.PORT || 3000;
+app.use(cookieParser());
+app.use('/api/auth', authRouter);
+app.use('/api/orders', orderRoutes);
+app.use('/api/courses', courseRoutes)
+app.use('/api/cart', cartRouter);
+app.use('/api/review', reviewrouter);
+const PORT = process.env.PORT;
 
 connectDB();
 app.listen(PORT, () => {
