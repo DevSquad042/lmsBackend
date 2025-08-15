@@ -6,8 +6,16 @@ const sectionSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  video: {
-    type: String, // Store file name or URL
+  videoFile: {
+    type: String, // Uploaded video file name
+    default: ''
+  },
+  videoUrl: {
+    type: String, // YouTube link
+    default: ''
+  },
+  pdf: {
+    type: String, // Uploaded PDF file name
     default: ''
   }
 });
@@ -31,12 +39,6 @@ const courseSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-
-  url:{
-    type: String,
-  
-  },
-
   categories: [{
     type: String,
     trim: true
@@ -49,11 +51,7 @@ const courseSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  sections: [sectionSchema], // 👈 Optional array of sections with video
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
+  sections: [sectionSchema],
 }, { timestamps: true });
 
 const Course = mongoose.model("Course", courseSchema);
