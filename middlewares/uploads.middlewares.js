@@ -50,7 +50,23 @@ const fileFilter = (req, file, cb) => {
 };
 
 const limits = {
-  fileSize: 1 * 1024 * 1024 * 1024, // 100MB max per file
+  fileSize: 1 * 1024 * 1024 * 1024 // 1GB
 };
+
+const videoFields = Array.from({ length: 50 }, (_, i) => ({
+  name: `video-${i}`,
+  maxCount: 1
+}));
+
+const pdfFields = Array.from({ length: 50 }, (_, i) => ({
+  name: `pdf-${i}`,
+  maxCount: 1
+}));
+
+const fieldsConfig = [
+  { name: 'thumbnail', maxCount: 1 },
+  ...videoFields,
+  ...pdfFields
+];
 
 export default multer({ storage, fileFilter, limits }).fields(fieldsConfig);
