@@ -10,7 +10,7 @@ import courseRoutes from "./routes/course.route.js";
 import cartRouter from "./routes/cart.route.js";
 import paymentRouter from "./routes/payment.route.js";
 import { paystackWebhook } from "./controllers/payment.controller.js";
-import connectDB from "./config/db.js";import reviewrouter from "./routes/reviewroute.js"
+import connectDB from "./config/db.js";
 
 import reviewrouter from "./routes/reviewroute.js";
 import enrollmentRoutes from './routes/enrollment.route.js';
