@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import reviewrouter from "./routes/review.route.js"
 import enrollmentRoutes from "./routes/enrollment.route.js";
 import rateLimit from "express-rate-limit";
+import { authMiddleware } from "./middlewares/auth.middleware.js";
 
 
 dotenv.config();
@@ -37,10 +38,12 @@ app.use('/api/cart', cartRouter);
 app.use('/api', limiter);
 app.use('/api/review', reviewrouter);
 app.use('/api/enrollments', enrollmentRoutes);
-
 const PORT = process.env.PORT;
 
 connectDB();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
+

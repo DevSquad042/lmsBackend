@@ -1,61 +1,8 @@
- import mongoose from "mongoose";
-import Course from "../models/course.model.js";
+import mongoose from "mongoose";
 import Review from "../models/review.model.js";
 import express from "express";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
-
-// export const rating = expressAsyncHandlerx( async(req, res) => {
-//     const {_id} = req.user;
-//     try {
-//         const { star, prodId} = req.body;
-//         const product = await product.findById(prodId);
-        
-//         let alreadyreviewed = product.ratings.find(
-//             (userId) => userId.postedby.toString() === _id.toString()
-//         );
-//         if (alreadyreviewed) {
-          
-
-//             const updatedReview = await product.updateOne(
-//                 {
-//                 rating: { $eleMatch: alreadyreviewed},
-//             },
-//             {
-//                 new: true,
-//             },
-//             {
-//                 $set :{"ratings.$.star": star}
-//             },
-
-//             );
-//             res.json(updatedReview);
-            
-
-
-//         } else {
-//             const reviewProduct = await product.findByIdAndUpdate(
-//                 prodId,
-//                 {
-//                     $push: {
-//                         rating: {
-//                             star: star,
-//                             postedby: _id,
-//                         },
-//                     },
-//             },
-//         {
-//             new: true,
-//         });
-//         res.json(reviewProduct);
-//         }
-        
-//     } catch (error) {
-//         res.status(400)
-//     }
-
-// });
-
-/////////////////////////////////////
 
 
   export const createReview = async (req, res) => {
@@ -92,6 +39,8 @@ import express from "express";
   }
 };
 
+
+
 // Get all reviews for a course
 
 export const getReviews = async (req, res) => {
@@ -105,34 +54,26 @@ export const getReviews = async (req, res) => {
   }
 };
 
-// export const updateReview = async (req, res) => {
-//   try {
-//     const { rating, comment } = req.body;
-//     const { reviewId } = req.params;
-//     const userId = req.user._id;
-//     const updatedReview = await Review.findOneAndUpdate(
-//       { _id: reviewId, userId},
-//       { rating, comment, updatedAt: Date.now() },
-//       { new: true }
-//     );
+// const mongoose = require('mongoose');
 
-//     if (!updatedReview) {
-//       return res.status(404).json({ message: "Review not found or not yours" });
-//     }
-
-//     res.json(updatedReview);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-export const updateReview = async (req, res) => {
+export const updateReview = async ( req, res) => {
   try {
-    const { reviewId } = req.params;
-    const userId = req.user._id; // from auth middleware
-    const { rating, comment } = req.body;
+    const {reviewId, userId} = req.body;
+
+    console.log(reviewId, userId);
+    
+    
+
+    // Validate reviewId
+    if (!mongoose.Types.ObjectId.isValid(reviewId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid review ID"
+      });
+    }
 
     // Validate input
+    const { rating, comment } = req.body;
     if (!rating && !comment) {
       return res.status(400).json({
         success: false,
@@ -141,15 +82,11 @@ export const updateReview = async (req, res) => {
     }
 
     // Find review & update only if it belongs to the logged-in user
-    const updatedReview = await Review.findOneAndUpdate(
-      { _id: reviewId, userId: userId },
-      {
-        ...(rating !== undefined && { rating }),
-        ...(comment !== undefined && { comment }),
-        updatedAt: Date.now()
-      },
-      { new: true, runValidators: true }
-    );
+    const updatedReview = await Review.findByIdAndUpdate(
+  reviewId,
+  { $set: { rating, comment } }, // Only update specific fields
+  { new: true }
+);
 
     if (!updatedReview) {
       return res.status(404).json({
@@ -161,17 +98,21 @@ export const updateReview = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Review updated successfully",
-      review: updatedReview
+      Review: updatedReview
     });
-
   } catch (error) {
-    console.error("Error updating review:", error);
+    console.error("Error updating review:", error.stack);
     res.status(500).json({
       success: false,
       message: "Server error while updating review"
     });
   }
 };
+
+
+
+
+
 
 // Get average rating for a course
 export const averageRating = async (req, res) => {

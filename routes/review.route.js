@@ -2,14 +2,20 @@ import express from 'express';
 import { verifyToken } from '../middlewares/verifyToken.middleware.js';
 import { createReview, getReviews, averageRating, updateReview } from '../controllers/reviewcontroller.js';
 import rateLimit from 'express-rate-limit';
+import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 
 const reviewRouter = express.Router();
 
 
 // Create a review
-reviewRouter.post('/addReview',  verifyToken, createReview)
-reviewRouter.patch('/updateReview', updateReview)
+reviewRouter.post('/addReview', createReview)
+
+//update reviews
+reviewRouter.patch('/updateReview',updateReview)
+
+//delete reviews
+reviewRouter.delete('/updateReview', updateReview)
 
 // Get all reviews for a course
 reviewRouter.get('/getReviews', getReviews)
