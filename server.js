@@ -4,6 +4,7 @@ import morgan from "morgan";
 import cookieParser from 'cookie-parser';
 import bodyParser from "body-parser";
 import connectDB from "./config/db.js";
+import cors from "cors";
 
 import authRouter from "./routes/auth.route.js";
 import orderRoutes from "./routes/order.route.js";
@@ -18,6 +19,12 @@ import enrollmentRoutes from './routes/enrollment.route.js';
 dotenv.config();
 const app = express();
 
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL, // Allow requests from the client URL 
+    credentials: true, // Allow cookies to be sent with requests
+  })
+)
 
 app.post(
   "/api/payments/webhook",
