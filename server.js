@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import reviewrouter from "./routes/review.route.js"
 import enrollmentRoutes from "./routes/enrollment.route.js";
 import rateLimit from "express-rate-limit";
-import { authMiddleware } from "./middlewares/auth.middleware.js";
 import bodyParser from "body-parser";
 import connectDB from "./config/db.js";
 import authRouter from "./routes/auth.route.js";
@@ -18,7 +17,6 @@ import { paystackWebhook } from "./controllers/payment.controller.js";
 
 dotenv.config();
 const app = express();
-
 
 const limiter = rateLimit({
   max: 50,

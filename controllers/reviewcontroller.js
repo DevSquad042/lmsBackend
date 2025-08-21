@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import Review from "../models/review.model.js";
 import express from "express";
-import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 
 
@@ -108,6 +107,18 @@ export const updateReview = async ( req, res) => {
     });
   }
 };
+
+
+export const deleteReview = async (req, res) => {
+  try {
+    const deleted = await Review.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Review not found' });
+    res.json({ message: 'Review deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 
 

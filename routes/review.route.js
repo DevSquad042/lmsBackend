@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken } from '../middlewares/verifyToken.middleware.js';
-import { createReview, getReviews, averageRating, updateReview } from '../controllers/reviewcontroller.js';
+import { createReview, getReviews, averageRating, updateReview, deleteReview } from '../controllers/reviewcontroller.js';
 
 
 const reviewRouter = express.Router();
@@ -13,7 +13,7 @@ reviewRouter.post('/addReview',verifyToken, createReview)
 reviewRouter.patch('/updateReview', verifyToken, updateReview)
 
 //delete reviews
-reviewRouter.delete('/deleteReview', updateReview)
+reviewRouter.delete('/:id', deleteReview)
 
 // Get all reviews for a course
 reviewRouter.get('/getReviews', getReviews)
