@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Review from "../models/review.model.js";
 
 
-
+//CREATE REVIEW FOR A COURSE
 
   export const createReview = async (req, res) => {
   try {
@@ -40,7 +40,7 @@ import Review from "../models/review.model.js";
 
 
 
-// Get all reviews for a course
+// GET ALL REVIEWS FOR THE COURSE
 
 export const getReviews = async (req, res) => {
   try {
@@ -53,7 +53,8 @@ export const getReviews = async (req, res) => {
   }
 };
 
-// const mongoose = require('mongoose');
+
+//UPDATE REVIEW FUNTION
 
 export const updateReview = async ( req, res) => {
   try {
@@ -108,7 +109,7 @@ export const updateReview = async ( req, res) => {
   }
 };
 
-
+//DELETE REVIEW FUNCTION
 export const deleteReview = async (req, res) => {
   try {
     const deleted = await Review.findByIdAndDelete(req.params.id);
@@ -121,22 +122,34 @@ export const deleteReview = async (req, res) => {
 
 
 
+//GET AVERAGE RATINGS
 
-
-
-
-// Get average rating for a course
 export const averageRating = async (req, res) => {
   try {
-    const reviewsAvg = await Review.find({ course: req.params.courseId });
-    if (reviewsAvg.length === 0) {
+    // Validate courseId parameter
+    const { courseId } = req.params;
+    if (!courseId) {
+      return res.status(400).json({ message: 'Course ID is required' });
+    }
+
+    // Query reviews for the given courseId
+    const reviews = await Review.find({courseId});
+
+    // Handle case with no reviews
+    if (!reviews || reviews.length === 0) {
       return res.json({ averageRating: 0, totalReviews: 0 });
     }
-    const totalRating = reviewsAvg.reduce((sum, review) => sum + review.rating, 0);
-    const averageRating = (totalRating / reviewsAvg.length).toFixed(1);
-    res.json({ averageRating, totalReviews: reviewsAvg.length });
+
+    // Calculate total rating and average
+    const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const averageRating = Number((totalRating / reviews.length).toFixed(1));
+
+    // Return response with average rating and total reviews
+    res.json({ averageRating, totalReviews: reviews.length });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Log error for debugging
+    console.error('Error calculating average rating:', error);
+    res.status(500).json({ message: 'Server error while calculating average rating' });
   }
 };
 

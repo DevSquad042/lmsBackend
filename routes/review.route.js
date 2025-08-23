@@ -7,10 +7,10 @@ const reviewRouter = express.Router();
 
 
 // Create a review
-reviewRouter.post('/addReview',verifyToken, createReview)
+reviewRouter.post('/addReview', createReview)
 
 //update reviews
-reviewRouter.patch('/updateReview', verifyToken, updateReview)
+reviewRouter.patch('/updateReview', updateReview)
 
 //delete reviews
 reviewRouter.delete('/:id', deleteReview)
@@ -20,7 +20,7 @@ reviewRouter.get('/getReviews', getReviews)
 
 
 // Get average rating for a course
-reviewRouter.get('/averageRating', averageRating )
+reviewRouter.get('/:courseId', averageRating )
   
 export default reviewRouter;
 
