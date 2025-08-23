@@ -14,18 +14,17 @@ import paymentRouter from "./routes/payment.route.js";
 import { paystackWebhook } from "./controllers/payment.controller.js";
 import reviewrouter from "./routes/review.route.js";
 import enrollmentRoutes from './routes/enrollment.route.js';
-import chatRoutes from './routes/chat.route.js'
-
+import chatRoutes from "./routes/chat.route.js";
 
 dotenv.config();
 const app = express();
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL, // Allow requests from the client URL 
-    credentials: true, // Allow cookies to be sent with requests
+    origin: process.env.CLIENT_URL, 
+    credentials: true,
   })
-)
+);
 
 app.post(
   "/api/payments/webhook",
@@ -33,15 +32,17 @@ app.post(
   paystackWebhook
 );
 
-// --- Regular middleware for all routes except webhook ---
+// --- Regular middleware ---
 app.use(express.json());
 app.use(cookieParser());
-app.use(morgan("dev")); // optional logging
+app.use(morgan("dev"));
 
 // --- Routes ---
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the LMS Backend API" });
 });
+
+app.use('/uploads', express.static('uploads'));
 
 app.use('/api/auth', authRouter);
 app.use('/api/orders', orderRoutes);
@@ -49,8 +50,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/cart', cartRouter);
 app.use('/api/review', reviewrouter);
 app.use('/api/enrollments', enrollmentRoutes);
-app.use("/api/chats", chatRoutes);
-
+app.use('/api/chats', chatRoutes);
 
 const PORT = process.env.PORT;
 

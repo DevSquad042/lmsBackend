@@ -1,15 +1,34 @@
 import Course from "../models/course.model.js";
 
-// Helpe to validate YouTube links
+// ✅ Helper to validate YouTube links
 function isValidYouTubeUrl(url) {
   const regex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
   return regex.test(url);
 }
 
+// calculate discounted price
+function applyDiscount(course) {
+  const now = new Date();
+
+  if (
+    course.discountPercentage > 0 &&
+    (!course.discountExpiry || new Date(course.discountExpiry) > now)
+  ) {
+    const discountAmount = (course.price * course.discountPercentage) / 100;
+    course.discountedPrice = Math.max(course.price - discountAmount, 0);
+  } else {
+    course.discountedPrice = course.price;
+  }
+
+  return course;
+}
+
+// ---------------- CRUD OPERATIONS ----------------
+
 // Create course
 export const createCourse = async (req, res) => {
   try {
-    const { title, description, instructor, price, categories, tags, sections } = req.body;
+    const { title, description, instructor, price, categories, tags, sections, discountPercentage, discountExpiry } = req.body;
 
     if (!title || !description || !instructor) {
       return res.status(400).json({ message: 'Title, description, and instructor are required' });
@@ -41,6 +60,8 @@ export const createCourse = async (req, res) => {
       description,
       instructor,
       price: price || 0,
+      discountPercentage: discountPercentage || 0,
+      discountExpiry: discountExpiry || null,
       categories: categories ? categories.split(',').map(c => c.trim()) : [],
       tags: tags ? tags.split(',').map(t => t.trim()) : [],
       thumbnail,
@@ -48,7 +69,7 @@ export const createCourse = async (req, res) => {
     });
 
     const saved = await newCourse.save();
-    res.status(201).json({ message: 'Course created', course: saved });
+    res.status(201).json({ message: 'Course created', course: applyDiscount(saved.toObject()) });
 
   } catch (err) {
     console.error('Create error:', err);
@@ -59,7 +80,8 @@ export const createCourse = async (req, res) => {
 // Get all courses
 export const getAllCourses = async (req, res) => {
   try {
-    const courses = await Course.find().sort({ createdAt: -1 });
+    let courses = await Course.find().sort({ createdAt: -1 });
+    courses = courses.map(c => applyDiscount(c.toObject()));
     res.status(200).json(courses);
   } catch (err) {
     res.status(500).json({ message: 'Failed to retrieve courses', error: err.message });
@@ -69,8 +91,10 @@ export const getAllCourses = async (req, res) => {
 // Get course by ID
 export const getCourseById = async (req, res) => {
   try {
-    const course = await Course.findById(req.params.id);
+    let course = await Course.findById(req.params.id);
     if (!course) return res.status(404).json({ message: 'Course not found' });
+
+    course = applyDiscount(course.toObject());
     res.status(200).json(course);
   } catch (err) {
     res.status(500).json({ message: 'Failed to retrieve course', error: err.message });
@@ -81,10 +105,12 @@ export const getCourseById = async (req, res) => {
 export const getCourseByTitle = async (req, res) => {
   try {
     const title = req.params.title;
-    const course = await Course.findOne({
+    let course = await Course.findOne({
       title: { $regex: new RegExp(`^${title}$`, 'i') }
     });
     if (!course) return res.status(404).json({ message: 'Course not found' });
+
+    course = applyDiscount(course.toObject());
     res.status(200).json(course);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching course by title', error: err.message });
@@ -111,7 +137,7 @@ export const updateCourse = async (req, res) => {
       return res.status(404).json({ message: 'Course not found' });
     }
 
-    res.status(200).json(updatedCourse);
+    res.status(200).json(applyDiscount(updatedCourse.toObject()));
   } catch (err) {
     res.status(500).json({ message: 'Failed to update course', error: err.message });
   }
@@ -128,6 +154,8 @@ export const deleteCourse = async (req, res) => {
     res.status(500).json({ message: 'Failed to delete course', error: err.message });
   }
 };
+
+// ---------------- SECTIONS ----------------
 
 // Add section
 export const addSection = async (req, res) => {
@@ -150,7 +178,7 @@ export const addSection = async (req, res) => {
     course.sections.push(sectionData);
     await course.save();
 
-    res.status(200).json({ message: 'Section added', course });
+    res.status(200).json({ message: 'Section added', course: applyDiscount(course.toObject()) });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -179,7 +207,7 @@ export const updateSection = async (req, res) => {
     }
 
     await course.save();
-    res.status(200).json({ message: 'Section updated', course });
+    res.status(200).json({ message: 'Section updated', course: applyDiscount(course.toObject()) });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -195,7 +223,7 @@ export const removeSection = async (req, res) => {
     course.sections.splice(index, 1);
     await course.save();
 
-    res.status(200).json({ message: 'Section removed', course });
+    res.status(200).json({ message: 'Section removed', course: applyDiscount(course.toObject()) });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

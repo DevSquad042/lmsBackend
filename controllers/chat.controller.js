@@ -1,43 +1,81 @@
-import Chat from "../models/chat.model.js";
+import Chat from '../models/chat.model.js';
 
-// Send a new message
+// ✅ Create a new chat message
 export const sendMessage = async (req, res) => {
   try {
-    const { sender, receiver, message, isAdminMessage } = req.body;
+    const { sender, receiver, message, attachments, voiceNote, isAdminMessage } = req.body;
 
-    if (!sender || !receiver || !message) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    const newMessage = new Chat({
+    const chat = new Chat({
       sender,
       receiver,
       message,
-      isAdminMessage: isAdminMessage || false,
+      attachments,
+      voiceNote,
+      isAdminMessage
     });
 
-    await newMessage.save();
+    await chat.save();
 
-    res.status(201).json(newMessage);
+    res.status(201).json({ success: true, chat });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
-// Get all messages between two users
+// ✅ Get all chats between two users
 export const getConversation = async (req, res) => {
   try {
-    const { userId, receiverId } = req.params;
+    const { user1, user2 } = req.params;
 
-    const messages = await Chat.find({
+    const chats = await Chat.find({
       $or: [
-        { sender: userId, receiver: receiverId },
-        { sender: receiverId, receiver: userId }
+        { sender: user1, receiver: user2 },
+        { sender: user2, receiver: user1 }
       ]
-    }).populate("sender receiver", "name email");
+    })
+      .populate('sender', 'name email')
+      .populate('receiver', 'name email')
+      .sort({ createdAt: 1 });
 
-    res.status(200).json(messages);
+    res.status(200).json({ success: true, chats });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ✅ Get recent chats for a user
+export const getRecentChats = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const chats = await Chat.find({
+      $or: [{ sender: userId }, { receiver: userId }]
+    })
+      .populate('sender', 'name email')
+      .populate('receiver', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, chats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ✅ Delete a chat message
+export const deleteMessage = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const chat = await Chat.findById(id);
+
+    if (!chat) {
+      return res.status(404).json({ success: false, message: 'Message not found' });
+    }
+
+    await chat.deleteOne();
+
+    res.status(200).json({ success: true, message: 'Message deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 };
