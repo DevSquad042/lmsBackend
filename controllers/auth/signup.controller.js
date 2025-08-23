@@ -53,7 +53,7 @@ export const signup = async (req, res) => {
 
         //send email
 
-        const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${verificationToken}`;
+        const verificationLink = `https://byway-hoce.onrender.com/api/auth/verify-email?token=${verificationToken}`;
         const html = `
       <h2>Hello ${firstName},</h2>
       <p>Please verify your email by clicking the link below:</p>
