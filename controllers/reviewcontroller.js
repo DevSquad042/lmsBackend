@@ -1,62 +1,8 @@
- import mongoose from "mongoose";
-import Course from "../models/course.model.js";
+import mongoose from "mongoose";
 import Review from "../models/review.model.js";
-import express from "express";
 
 
-// export const rating = expressAsyncHandlerx( async(req, res) => {
-//     const {_id} = req.user;
-//     try {
-//         const { star, prodId} = req.body;
-//         const product = await product.findById(prodId);
-        
-//         let alreadyreviewed = product.ratings.find(
-//             (userId) => userId.postedby.toString() === _id.toString()
-//         );
-//         if (alreadyreviewed) {
-          
-
-//             const updatedReview = await product.updateOne(
-//                 {
-//                 rating: { $eleMatch: alreadyreviewed},
-//             },
-//             {
-//                 new: true,
-//             },
-//             {
-//                 $set :{"ratings.$.star": star}
-//             },
-
-//             );
-//             res.json(updatedReview);
-            
-
-
-//         } else {
-//             const reviewProduct = await product.findByIdAndUpdate(
-//                 prodId,
-//                 {
-//                     $push: {
-//                         rating: {
-//                             star: star,
-//                             postedby: _id,
-//                         },
-//                     },
-//             },
-//         {
-//             new: true,
-//         });
-//         res.json(reviewProduct);
-//         }
-        
-//     } catch (error) {
-//         res.status(400)
-//     }
-
-// });
-
-/////////////////////////////////////
-
+//CREATE REVIEW FOR A COURSE
 
   export const createReview = async (req, res) => {
   try {
@@ -68,6 +14,15 @@ import express from "express";
     }
     if (rating < 1 || rating > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    // Count how many reviews user already has for this course
+    const reviewCount = await Review.countDocuments({ userId, courseId });
+
+    if (reviewCount >= 5) {
+      return res.status(400).json({
+        message: "You have already reviewed this course twice."
+      });
     }
 
     const review = new Review({ courseId, userId, rating, comment });
@@ -83,7 +38,9 @@ import express from "express";
   }
 };
 
-// Get all reviews for a course
+
+
+// GET ALL REVIEWS FOR THE COURSE
 
 export const getReviews = async (req, res) => {
   try {
@@ -96,18 +53,103 @@ export const getReviews = async (req, res) => {
   }
 };
 
-// Get average rating for a course
+
+//UPDATE REVIEW FUNTION
+
+export const updateReview = async ( req, res) => {
+  try {
+    const {reviewId, userId} = req.body;
+
+    console.log(reviewId, userId);
+    
+    
+
+    // Validate reviewId
+    if (!mongoose.Types.ObjectId.isValid(reviewId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid review ID"
+      });
+    }
+
+    // Validate input
+    const { rating, comment } = req.body;
+    if (!rating && !comment) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a rating or comment to update"
+      });
+    }
+
+    // Find review & update only if it belongs to the logged-in user
+    const updatedReview = await Review.findByIdAndUpdate(
+  reviewId,
+  { $set: { rating, comment } }, // Only update specific fields
+  { new: true }
+);
+
+    if (!updatedReview) {
+      return res.status(404).json({
+        success: false,
+        message: "Review not found or you don't have permission to update it"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Review updated successfully",
+      Review: updatedReview
+    });
+  } catch (error) {
+    console.error("Error updating review:", error.stack);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating review"
+    });
+  }
+};
+
+//DELETE REVIEW FUNCTION
+export const deleteReview = async (req, res) => {
+  try {
+    const deleted = await Review.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: 'Review not found' });
+    res.json({ message: 'Review deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+//GET AVERAGE RATINGS
+
 export const averageRating = async (req, res) => {
   try {
-    const reviewsAvg = await Review.find({ course: req.params.courseId });
-    if (reviewsAvg.length === 0) {
+    // Validate courseId parameter
+    const { courseId } = req.params;
+    if (!courseId) {
+      return res.status(400).json({ message: 'Course ID is required' });
+    }
+
+    // Query reviews for the given courseId
+    const reviews = await Review.find({courseId});
+
+    // Handle case with no reviews
+    if (!reviews || reviews.length === 0) {
       return res.json({ averageRating: 0, totalReviews: 0 });
     }
-    const totalRating = reviewsAvg.reduce((sum, review) => sum + review.rating, 0);
-    const averageRating = (totalRating / reviewsAvg.length).toFixed(1);
-    res.json({ averageRating, totalReviews: reviewsAvg.length });
+
+    // Calculate total rating and average
+    const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
+    const averageRating = Number((totalRating / reviews.length).toFixed(1));
+
+    // Return response with average rating and total reviews
+    res.json({ averageRating, totalReviews: reviews.length });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Log error for debugging
+    console.error('Error calculating average rating:', error);
+    res.status(500).json({ message: 'Server error while calculating average rating' });
   }
 };
 
