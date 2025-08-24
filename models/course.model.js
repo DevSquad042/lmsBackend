@@ -1,56 +1,25 @@
 import mongoose from "mongoose";
 
 const sectionSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  videoFile: {
-    type: String, // Uploaded video file name
-    default: ''
-  },
-  videoUrl: {
-    type: String, // YouTube link
-    default: ''
-  },
-  pdf: {
-    type: String, // Uploaded PDF file name
-    default: ''
-  }
+  title: { type: String, required: true, trim: true },
+  videoFile: { type: String, default: '' },
+  videoUrl: { type: String, default: '' },
+  pdf: { type: String, default: '' }
 });
 
 const courseSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
-  },
-  description: {
-    type: String,
-    required: true
-  },
-  instructor: {
-    type: String,
-    required: true
-  },
-  price: {
-    type: Number,
-    default: 0
-  },
-  categories: [{
-    type: String,
-    trim: true
-  }],
-  tags: [{
-    type: String,
-    trim: true
-  }],
-  thumbnail: {
-    type: String,
-    default: ''
-  },
+  title: { type: String, required: true, unique: true, trim: true },
+  description: { type: String, required: true },
+  instructor: { type: String, required: true },
+  price: { type: Number, default: 0 },
+
+  // 🔥 Discount fields
+  discountPercentage: { type: Number, default: 0 }, // e.g. 20 means 20%
+  discountExpiry: { type: Date }, // until when the discount is valid
+
+  categories: [{ type: String, trim: true }],
+  tags: [{ type: String, trim: true }],
+  thumbnail: { type: String, default: '' },
   sections: [sectionSchema],
 }, { timestamps: true });
 
