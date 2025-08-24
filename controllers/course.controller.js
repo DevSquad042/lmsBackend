@@ -1,6 +1,5 @@
 import Course from "../models/course.model.js";
 
-// ✅ Helper to validate YouTube links
 function isValidYouTubeUrl(url) {
   const regex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
   return regex.test(url);
@@ -26,6 +25,7 @@ function applyDiscount(course) {
 // ---------------- CRUD OPERATIONS ----------------
 
 // Create course
+
 export const createCourse = async (req, res) => {
   try {
     const { title, description, instructor, price, categories, tags, sections, discountPercentage, discountExpiry } = req.body;
