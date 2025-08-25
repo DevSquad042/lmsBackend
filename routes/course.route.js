@@ -43,6 +43,9 @@ router.get('/', courseController.getAllCourses);
 router.get('/name/:title', courseController.getCourseByTitle);
 router.get('/:id', courseController.getCourseById);
 
+// ✅ Course preview route (NEW 👇)
+router.get('/:id/preview', courseController.getCoursePreview);
+
 router.put(
   '/:id',
   upload.fields([
