@@ -152,5 +152,3 @@ export const averageRating = async (req, res) => {
     res.status(500).json({ message: 'Server error while calculating average rating' });
   }
 };
-
-
