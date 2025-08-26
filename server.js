@@ -20,7 +20,7 @@ dotenv.config();
 const app = express();
 
 const limiter = rateLimit({
-  max: 50,
+  max: 100,
   windowsMs: 60 * 60 * 1000,
   message: "Too many request from this IP, please try again in a hour!" 
 });
