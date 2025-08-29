@@ -6,6 +6,7 @@ import Course from "../models/course.model.js";
 
 
 
+//CREATE OR ADD REVIEWS AND RATINGS TO INSTRUCTOR OR COURSE
 
 export const createReview = async (req, res) => {
   try {
@@ -62,8 +63,7 @@ export const createReview = async (req, res) => {
     console.log('Existing reviews:', existingReviews);
 
     // Count how many reviews the user already has for this target
-    // console.log("Counting reviews for:", { userId, targetId, targetType });
-    
+
     const reviewCount = await Review.countDocuments({ targetType });
 
     if (reviewCount >= 10) {
@@ -72,10 +72,7 @@ export const createReview = async (req, res) => {
       });
     }
 
-  
-    console.log("Review count:", reviewCount);
-
-     // Count total reviews for this target (for response)
+  // Count total reviews for this target (for response)
     const totalRatings = await Review.countDocuments({ targetType });
     console.log('Total reviews for target:', totalRatings);
 
@@ -108,7 +105,9 @@ export const createReview = async (req, res) => {
   }
 };
 
-// Get all reviews for a specific course or instructor
+
+// GET REVIEWS AND RATINGS Get all reviews for a specific course or instructor
+
 export const getAllReviews = async (req, res) => {
   try {
     const { targetId } = req.params; // targetId is courseId or instructorId
@@ -160,66 +159,9 @@ export const getAllReviews = async (req, res) => {
 };
 
 
-// export const getAllReviews = async (req, res) => {
-//   try {
-//     const { targetId } = req.params;
-//     const { type } = req.query;
 
-//     // Validate type
-//     if (!type || !['course', 'instructor'].includes(type)) {
-//       return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
-//     }
+//GET AVERAGE|| Get average rating for a specific course or instructor
 
-//     // Validate targetId
-//     if (!mongoose.Types.ObjectId.isValid(targetId)) {
-//       return res.status(400).json({ error: 'Invalid targetId' });
-//     }
-
-//     // Verify target exists
-//     if (type === 'course') {
-//       const course = await Course.findById(targetId);
-//       if (!course) {
-//         return res.status(404).json({ error: 'Course not found' });
-//       }
-//     } else {
-//       const instructor = await User.findById(targetId);
-//       if (!instructor) {
-//         return res.status(404).json({ error: 'Instructor not found' });
-//       }
-//       if (instructor.role !== 'instructor') {
-//         return res.status(403).json({ message: 'Target user is not an instructor' });
-//       }
-//     }
-
-//     // Fetch all reviews for the target
-//     const reviews = await Review.find({
-//       targetId: new mongoose.Types.ObjectId(targetId),
-//       targetType: type,
-//     })
-//       .populate('userId', 'name email')
-//       .select('rating comment createdAt');
-
-//     // Count total reviews for this target
-//     const totalReviews = reviews.length;
-
-//     res.status(200).json({
-//       status: 'success',
-//       totalReviews, // Total number of reviews
-//       data: {
-//         reviews,
-//       },
-//     });
-//   } catch (error) {
-//     console.error('Error in getAllReviews:', error);
-//     res.status(500).json({ error: 'Server error while fetching reviews', details: error.message });
-//   }
-// };
-
-
-
-
-
-// Get average rating for a specific course or instructor
 export const getAverageRating = async (req, res) => {
   try {
     const { targetId } = req.params;
