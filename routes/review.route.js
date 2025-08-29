@@ -1,26 +1,39 @@
 import express from 'express';
 import { verifyToken } from '../middlewares/verifyToken.middleware.js';
-import { createReview, getReviews, averageRating, updateReview, deleteReview } from '../controllers/reviewcontroller.js';
+import { createReview, getAllReviews, getAverageRating } from '../controllers/reviewcontroller.js';
+// import { addRating } from '../controllers/rating.controller.js';
 
 
 const reviewRouter = express.Router();
 
 
 // Create a review
-reviewRouter.post('/addReview', createReview)
+reviewRouter.post('/addReview/:id/:targetId', verifyToken, createReview)
+reviewRouter.get('/getReviews/:targetId', getAllReviews)
+
+reviewRouter.get('/average/:targetId', getAverageRating )
+// reviewRouter.post('/addReview/:id/:courseId', verifyToken, createReview)
 
 //update reviews
-reviewRouter.patch('/updateReview', updateReview)
+// reviewRouter.patch('/updateReview', updateReview)
 
 //delete reviews
-reviewRouter.delete('/:id', deleteReview)
+// reviewRouter.delete('/:id', deleteReview)
 
 // Get all reviews for a course
-reviewRouter.get('/getReviews', getReviews)
-
 
 // Get average rating for a course
-reviewRouter.get('/:courseId', averageRating )
+// reviewRouter.post('/addRating/:Id/:instructorId/:courseId', verifyToken )
+
+
+// reviewRouter.get('/:courseId', averageRating )
+
+// reviewRouter.get('/:courseId', averageRating )
+
+
+
+
+
   
 export default reviewRouter;
 
