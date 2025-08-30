@@ -9,9 +9,22 @@ const reviewSchema = new mongoose.Schema({
 
     courseId: {
          type: mongoose.Schema.Types.ObjectId, 
-         ref: 'course', 
-         required: true 
+         ref: 'Course', 
+         required: false 
         },
+
+    reviewCount: {
+        type: Number, 
+         required: false
+        },
+
+        
+
+    targetType: {
+    type: String,
+    required: true,
+    enum: ['instructor', 'Course']
+  },
 
     rating: { 
         type: Number, 
@@ -21,9 +34,9 @@ const reviewSchema = new mongoose.Schema({
         required: true 
     },
 
-    totalratings: {
-         type: String,
-         default: 0,
+    totalRatings: {
+         type: Number,
+         required: true
     },
 
     comment: { 

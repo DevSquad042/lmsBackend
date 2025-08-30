@@ -1,155 +1,228 @@
 import mongoose from "mongoose";
 import Review from "../models/review.model.js";
+import User from "../models/users.model.js";
+import Course from "../models/course.model.js";
 
 
-//CREATE REVIEW FOR A COURSE
 
-  export const createReview = async (req, res) => {
+
+//CREATE OR ADD REVIEWS AND RATINGS TO INSTRUCTOR OR COURSE
+
+export const createReview = async (req, res) => {
   try {
-    const { courseId, userId, rating, comment } = req.body;
+    const {targetId } = req.params; // :id is userId, :targetId is courseId or instructorId
+    const { type } = req.query; // Get type from query (e.g., ?type=course or ?type=instructor)
+    const { rating, comment } = req.body;
+    const userId = req.user.id; // From authentication middleware
 
-    // Validate input
-    if (!courseId || !userId || !rating || !comment) {
-      return res.status(400).json({ message: 'All fields are required' });
+    // console.log("Request params:", { id, targetId, type, userId, rating, comment });
+
+    // Validate type
+    if (!type || !["Course", "instructor"].includes(type)) {
+      return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
+    }
+
+    // Validate required fields
+    if (!userId || !rating || !targetId) {
+      return res.status(400).json({ message: "userId, rating, and targetId are required" });
     }
     if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
     }
 
-    // Count how many reviews user already has for this course
-    const reviewCount = await Review.countDocuments({ userId, courseId });
+    // Validate ObjectIds
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: "Invalid userId" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(targetId)) {
+      return res.status(400).json({ error: "Invalid targetId" });
+    }
 
-    if (reviewCount >= 5) {
+    // Determine target type and verify target exists
+    let targetType, courseId;
+    if (type === "Course") {
+      console.log("Checking courseId:", targetId);
+      targetType = "Course";
+      courseId = targetId; // Set courseId for course reviews
+      const course = await Course.findById(targetId);
+      if (!course) {
+        return res.status(404).json({ error: "Course not found" });
+      }
+    } else {
+      console.log("Checking instructorId:", targetId);
+      targetType = "instructor";
+      const instructor = await User.findById(targetId);
+      if (!instructor) {
+        return res.status(404).json({ error: "Instructor not found" });
+      }
+      if (instructor.role !== "instructor") {
+        return res.status(403).json({ message: "Target user is not an instructor" });
+      }
+    }
+     const existingReviews = await Review.find({targetType});
+    console.log('Existing reviews:', existingReviews);
+
+    // Count how many reviews the user already has for this target
+
+    const reviewCount = await Review.countDocuments({ targetType });
+
+    if (reviewCount >= 10) {
       return res.status(400).json({
-        message: "You have already reviewed this course twice."
+        message: "You have already reviewed this course twice....haba now!!."
       });
     }
 
-    const review = new Review({ courseId, userId, rating, comment });
+  // Count total reviews for this target (for response)
+    const totalRatings = await Review.countDocuments({ targetType });
+    console.log('Total reviews for target:', totalRatings);
+
+    // Create the review
+    const reviewData = {
+      userId,
+      targetId,
+      targetType,
+      totalRatings,
+      rating,
+      reviewCount,
+      comment: comment || "", // Optional comment with default empty string
+    };
+    if (type === "Course") {
+      reviewData.courseId = courseId; // Only include courseId for course reviews
+    }
+
+    const review = new Review(reviewData);
+
     await review.save();
     res.status(201).json({
-      status: 'success',
+      status: "success",
       data: {
-        review: review
-      }
+        review,
+      },
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error in createReview:", error);
+    res.status(500).json({ error: "Server error while adding review", details: error.message });
   }
 };
 
 
+// GET REVIEWS AND RATINGS Get all reviews for a specific course or instructor
 
-// GET ALL REVIEWS FOR THE COURSE
-
-export const getReviews = async (req, res) => {
+export const getAllReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ course: req.params.courseId })
-      .populate('userId', 'courseId')
-      .sort({ createdAt: -1 });
-    res.json(reviews);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    const { targetId } = req.params; // targetId is courseId or instructorId
+    const { type } = req.query; // ?type=course or ?type=instructor
 
-
-//UPDATE REVIEW FUNTION
-
-export const updateReview = async ( req, res) => {
-  try {
-    const {reviewId, userId} = req.body;
-
-    console.log(reviewId, userId);
-    
-    
-
-    // Validate reviewId
-    if (!mongoose.Types.ObjectId.isValid(reviewId)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid review ID"
-      });
+    // Validate type
+    if (!type || !['course', 'instructor'].includes(type)) {
+      return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
     }
 
-    // Validate input
-    const { rating, comment } = req.body;
-    if (!rating && !comment) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide a rating or comment to update"
-      });
+    // Validate targetId
+    if (!mongoose.Types.ObjectId.isValid(targetId)) {
+      return res.status(400).json({ error: 'Invalid targetId' });
     }
 
-    // Find review & update only if it belongs to the logged-in user
-    const updatedReview = await Review.findByIdAndUpdate(
-  reviewId,
-  { $set: { rating, comment } }, // Only update specific fields
-  { new: true }
-);
-
-    if (!updatedReview) {
-      return res.status(404).json({
-        success: false,
-        message: "Review not found or you don't have permission to update it"
-      });
+    // Verify target exists
+    if (type === 'course') {
+      const course = await Course.findById(targetId);
+      if (!course) {
+        return res.status(404).json({ error: 'Course not found' });
+      }
+    } else {
+      const instructor = await User.findById(targetId);
+      if (!instructor) {
+        return res.status(404).json({ error: 'Instructor not found' });
+      }
+      if (instructor.role !== 'instructor') {
+        return res.status(403).json({ message: 'Target user is not an instructor' });
+      }
     }
+
+    // Fetch all reviews for the target
+    const reviews = await Review.find({ targetType: type })
+      .populate('targetType', 'userName email') // Populate user details (adjust fields as needed)
+      .select('rating comment createdAt')
+      .sort({ createdAt: -1 }) // Select relevant fields
 
     res.status(200).json({
-      success: true,
-      message: "Review updated successfully",
-      Review: updatedReview
+      status: 'success',
+      count: reviews.length,
+      data: {
+        reviews,
+      },
     });
   } catch (error) {
-    console.error("Error updating review:", error.stack);
-    res.status(500).json({
-      success: false,
-      message: "Server error while updating review"
-    });
-  }
-};
-
-//DELETE REVIEW FUNCTION
-export const deleteReview = async (req, res) => {
-  try {
-    const deleted = await Review.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: 'Review not found' });
-    res.json({ message: 'Review deleted' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Error in getAllReviews:', error);
+    res.status(500).json({ error: 'Server error while fetching reviews', details: error.message });
   }
 };
 
 
 
-//GET AVERAGE RATINGS
+//GET AVERAGE|| Get average rating for a specific course or instructor
 
-export const averageRating = async (req, res) => {
+export const getAverageRating = async (req, res) => {
   try {
-    // Validate courseId parameter
-    const { courseId } = req.params;
-    if (!courseId) {
-      return res.status(400).json({ message: 'Course ID is required' });
+    const { targetId } = req.params;
+    const { type } = req.query;
+
+    // Validate type
+    if (!type || !['course', 'instructor'].includes(type)) {
+      return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
     }
 
-    // Query reviews for the given courseId
-    const reviews = await Review.find({courseId});
-
-    // Handle case with no reviews
-    if (!reviews || reviews.length === 0) {
-      return res.json({ averageRating: 0, totalReviews: 0 });
+    // Validate targetId
+    if (!mongoose.Types.ObjectId.isValid(targetId)) {
+      return res.status(400).json({ error: 'Invalid targetId' });
     }
 
-    // Calculate total rating and average
-    const totalRating = reviews.reduce((sum, review) => sum + (review.rating || 0), 0);
-    const averageRating = Number((totalRating / reviews.length).toFixed(1));
+    // Verify target exists
+    if (type === 'course') {
+      const course = await Course.findById(targetId);
+      if (!course) {
+        return res.status(404).json({ error: 'Course not found' });
+      }
+    } else {
+      const instructor = await User.findById(targetId);
+      if (!instructor) {
+        return res.status(404).json({ error: 'Instructor not found' });
+      }
+      if (instructor.role !== 'instructor') {
+        return res.status(403).json({ message: 'Target user is not an instructor' });
+      }
+    }
 
-    // Return response with average rating and total reviews
-    res.json({ averageRating, totalReviews: reviews.length });
+    // Calculate average rating and total reviews
+    const result = await Review.aggregate([
+      { $match: { targetType: type } },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 },
+          totalRatingSum: { $sum: '$rating' }, // Sum of all ratings
+        },
+      },
+    ]);
+
+    const averageRating = result.length > 0 ? result[0].averageRating : 0;
+    const totalReviews = result.length > 0 ? result[0].totalReviews : 0;
+    const totalRatingSum = result.length > 0 ? result[0].totalRatingSum : 0;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        targetId,
+        targetType: type,
+        averageRating: averageRating ? Number(averageRating.toFixed(2)) : 0,
+        totalReviews,
+        totalRatingSum, // Sum of ratings
+      },
+    });
   } catch (error) {
-    // Log error for debugging
-    console.error('Error calculating average rating:', error);
-    res.status(500).json({ message: 'Server error while calculating average rating' });
+    console.error('Error in getAverageRating:', error);
+    res.status(500).json({ error: 'Server error while calculating average rating', details: error.message });
   }
 };
 
