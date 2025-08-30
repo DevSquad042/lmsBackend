@@ -74,7 +74,9 @@ export const createReview = async (req, res) => {
 
   // Count total reviews for this target (for response)
     const totalRatings = await Review.countDocuments({ targetType });
-    console.log('Total reviews for target:', totalRatings);
+    // console.log('Total reviews for target:', totalRatings);----- This is to debug
+
+
 
     // Create the review
     const reviewData = {
