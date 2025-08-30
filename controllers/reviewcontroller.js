@@ -74,7 +74,9 @@ export const createReview = async (req, res) => {
 
   // Count total reviews for this target (for response)
     const totalRatings = await Review.countDocuments({ targetType });
-    console.log('Total reviews for target:', totalRatings);
+    // console.log('Total reviews for target:', totalRatings);----- This is to debug
+
+
 
     // Create the review
     const reviewData = {
@@ -114,7 +116,7 @@ export const getAllReviews = async (req, res) => {
     const { type } = req.query; // ?type=course or ?type=instructor
 
     // Validate type
-    if (!type || !['course', 'instructor'].includes(type)) {
+    if (!type || !['Course', 'instructor'].includes(type)) {
       return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
     }
 
@@ -124,7 +126,7 @@ export const getAllReviews = async (req, res) => {
     }
 
     // Verify target exists
-    if (type === 'course') {
+    if (type === 'Course') {
       const course = await Course.findById(targetId);
       if (!course) {
         return res.status(404).json({ error: 'Course not found' });
@@ -141,15 +143,18 @@ export const getAllReviews = async (req, res) => {
 
     // Fetch all reviews for the target
     const reviews = await Review.find({ targetType: type })
-      .populate('targetType', 'userName email') // Populate user details (adjust fields as needed)
-      .select('rating comment createdAt')
-      .sort({ createdAt: -1 }) // Select relevant fields
+    .populate('targetType', 'userName email') // Populate user details (adjust fields as needed)
+    .select('rating comment createdAt')
+    .sort({ createdAt: -1 }) // Select relevant fields
+
+    console.log(reviews)
+    
 
     res.status(200).json({
       status: 'success',
       count: reviews.length,
       data: {
-        reviews,
+        reviews
       },
     });
   } catch (error) {
@@ -168,7 +173,7 @@ export const getAverageRating = async (req, res) => {
     const { type } = req.query;
 
     // Validate type
-    if (!type || !['course', 'instructor'].includes(type)) {
+    if (!type || !['Course', 'instructor'].includes(type)) {
       return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
     }
 
@@ -178,7 +183,7 @@ export const getAverageRating = async (req, res) => {
     }
 
     // Verify target exists
-    if (type === 'course') {
+    if (type === 'Course') {
       const course = await Course.findById(targetId);
       if (!course) {
         return res.status(404).json({ error: 'Course not found' });
@@ -225,5 +230,3 @@ export const getAverageRating = async (req, res) => {
     res.status(500).json({ error: 'Server error while calculating average rating', details: error.message });
   }
 };
-
-
