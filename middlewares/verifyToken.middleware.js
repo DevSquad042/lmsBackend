@@ -19,7 +19,7 @@ export const verifyToken = async (req, res, next) => {
         req.user = {
             id: user._id.toString(),
             email: user.email,
-            userName: user.userName,
+            // userName: user.userName,
             role: user.role
         };
 
