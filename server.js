@@ -31,7 +31,7 @@ const limiter = rateLimit({
 
 const allowedOrigins = [
   process.env.CLIENT_URL, 
-  "https://splendorous-arithmetic-cabcd6.netlify.app"
+  "http://byway-devsquad.netlify.app"
 ];
 
 app.use(
