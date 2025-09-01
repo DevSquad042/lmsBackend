@@ -1,9 +1,12 @@
+// controllers/course.controller.js
 import Course from "../models/course.model.js";
+
+// ---------- Helpers ----------
 
 // validate youtube link
 function isValidYouTubeUrl(url) {
-  const regex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
-  return regex.test(url);
+  const regex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/i;
+  return typeof url === "string" && regex.test(url);
 }
 
 // calculate discounted price
@@ -23,7 +26,53 @@ function applyDiscount(course) {
   return course;
 }
 
-// ---------------- CRUD OPERATIONS ----------------
+// build base URL (http://host:port)
+function getBaseUrl(req) {
+  return `${req.protocol}://${req.get("host")}`;
+}
+
+// turn filename -> full URL at /uploads/<filename>
+function toFileUrl(req, filename) {
+  if (!filename) return "";
+  return `${getBaseUrl(req)}/uploads/${filename}`;
+}
+
+// parse categories/tags from string ("a,b") or JSON string or array
+function toArray(val) {
+  if (Array.isArray(val)) return val;
+  if (val == null) return [];
+  if (typeof val === "string") {
+    // Try JSON first
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed;
+    } catch (_) {
+      // fall through to comma-separated
+    }
+    return val
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
+
+// parse sections from JSON string or array
+function parseSections(val) {
+  if (Array.isArray(val)) return val;
+  if (!val) return [];
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+// ---------- CRUD OPERATIONS ----------
 
 // ✅ Create course
 export const createCourse = async (req, res) => {
@@ -52,37 +101,39 @@ export const createCourse = async (req, res) => {
     if (exists)
       return res.status(409).json({ message: "Course title already exists" });
 
-    const thumbnail = req.files?.thumbnail?.[0]?.filename || "";
+    // Thumbnail (full URL)
+    const thumbnailFilename = req.files?.thumbnail?.[0]?.filename || "";
+    const thumbnail = thumbnailFilename ? toFileUrl(req, thumbnailFilename) : "";
 
-    let parsedSections = [];
-    if (sections) {
-      parsedSections = JSON.parse(sections).map((section, index) => {
-        const videoUrl =
-          section.videoUrl && isValidYouTubeUrl(section.videoUrl)
-            ? section.videoUrl
-            : "";
-        const videoFile = req.files?.[`video-${index}`]?.[0]?.filename || "";
-        const pdf = req.files?.[`pdf-${index}`]?.[0]?.filename || "";
+    // Sections (support multi-part uploads: video-0, pdf-0, etc)
+    const incomingSections = parseSections(sections);
+    const parsedSections = incomingSections.map((section, index) => {
+      const maybeVideoUrl =
+        section.videoUrl && isValidYouTubeUrl(section.videoUrl)
+          ? section.videoUrl
+          : "";
 
-        return {
-          title: section.title,
-          videoFile,
-          videoUrl,
-          pdf,
-          isPreview: section.isPreview || false, // NEW 👈
-        };
-      });
-    }
+      const videoFileName = req.files?.[`video-${index}`]?.[0]?.filename || "";
+      const pdfFileName = req.files?.[`pdf-${index}`]?.[0]?.filename || "";
+
+      return {
+        title: section.title,
+        videoUrl: maybeVideoUrl,
+        videoFile: videoFileName ? toFileUrl(req, videoFileName) : "",
+        pdf: pdfFileName ? toFileUrl(req, pdfFileName) : "",
+        isPreview: !!section.isPreview,
+      };
+    });
 
     const newCourse = new Course({
       title,
       description,
       instructor,
-      price: price || 0,
-      discountPercentage: discountPercentage || 0,
+      price: Number(price) || 0,
+      discountPercentage: Number(discountPercentage) || 0,
       discountExpiry: discountExpiry || null,
-      categories: categories ? categories.split(",").map((c) => c.trim()) : [],
-      tags: tags ? tags.split(",").map((t) => t.trim()) : [],
+      categories: toArray(categories),
+      tags: toArray(tags),
       thumbnail,
       sections: parsedSections,
     });
@@ -175,14 +226,24 @@ export const getCourseByTitle = async (req, res) => {
   }
 };
 
-// ✅ Update course
+// ✅ Update course (thumbnail -> full URL if provided)
 export const updateCourse = async (req, res) => {
   try {
     const courseId = req.params.id;
-    const updates = req.body;
+    const updates = { ...req.body };
 
+    // Normalize categories / tags if provided
+    if (updates.categories !== undefined) updates.categories = toArray(updates.categories);
+    if (updates.tags !== undefined) updates.tags = toArray(updates.tags);
+
+    // Normalize numeric fields if provided
+    if (updates.price !== undefined) updates.price = Number(updates.price) || 0;
+    if (updates.discountPercentage !== undefined)
+      updates.discountPercentage = Number(updates.discountPercentage) || 0;
+
+    // Thumbnail (full URL)
     if (req.files?.thumbnail?.[0]) {
-      updates.thumbnail = req.files.thumbnail[0].filename;
+      updates.thumbnail = toFileUrl(req, req.files.thumbnail[0].filename);
     }
 
     const updatedCourse = await Course.findByIdAndUpdate(
@@ -219,7 +280,7 @@ export const deleteCourse = async (req, res) => {
 
 // ---------------- SECTIONS ----------------
 
-// ✅ Add section
+// ✅ Add section (saves video/pdf as full URLs)
 export const addSection = async (req, res) => {
   try {
     const { courseId } = req.params;
@@ -233,9 +294,13 @@ export const addSection = async (req, res) => {
     const sectionData = {
       title,
       videoUrl: isValidYouTubeUrl(videoUrl) ? videoUrl : "",
-      videoFile: req.files?.video?.[0]?.filename || "",
-      pdf: req.files?.pdf?.[0]?.filename || "",
-      isPreview: isPreview || false, // NEW 👈
+      videoFile: req.files?.video?.[0]?.filename
+        ? toFileUrl(req, req.files.video[0].filename)
+        : "",
+      pdf: req.files?.pdf?.[0]?.filename
+        ? toFileUrl(req, req.files.pdf[0].filename)
+        : "",
+      isPreview: !!isPreview,
     };
 
     course.sections.push(sectionData);
@@ -250,7 +315,7 @@ export const addSection = async (req, res) => {
   }
 };
 
-// ✅ Update section
+// ✅ Update section (handles either YouTube URL or uploaded file)
 export const updateSection = async (req, res) => {
   try {
     const { courseId, index } = req.params;
@@ -259,20 +324,24 @@ export const updateSection = async (req, res) => {
     const course = await Course.findById(courseId);
     if (!course) return res.status(404).json({ message: "Course not found" });
 
-    if (title) course.sections[index].title = title;
+    const i = Number(index);
+    if (!course.sections[i])
+      return res.status(400).json({ message: "Invalid section index" });
+
+    if (title) course.sections[i].title = title;
     if (videoUrl && isValidYouTubeUrl(videoUrl)) {
-      course.sections[index].videoUrl = videoUrl;
-      course.sections[index].videoFile = "";
+      course.sections[i].videoUrl = videoUrl;
+      course.sections[i].videoFile = "";
     }
     if (req.files?.video?.[0]) {
-      course.sections[index].videoFile = req.files.video[0].filename;
-      course.sections[index].videoUrl = "";
+      course.sections[i].videoFile = toFileUrl(req, req.files.video[0].filename);
+      course.sections[i].videoUrl = "";
     }
     if (req.files?.pdf?.[0]) {
-      course.sections[index].pdf = req.files.pdf[0].filename;
+      course.sections[i].pdf = toFileUrl(req, req.files.pdf[0].filename);
     }
     if (isPreview !== undefined) {
-      course.sections[index].isPreview = isPreview;
+      course.sections[i].isPreview = !!isPreview;
     }
 
     await course.save();
@@ -292,7 +361,11 @@ export const removeSection = async (req, res) => {
     const course = await Course.findById(courseId);
     if (!course) return res.status(404).json({ message: "Course not found" });
 
-    course.sections.splice(index, 1);
+    const i = Number(index);
+    if (!course.sections[i])
+      return res.status(400).json({ message: "Invalid section index" });
+
+    course.sections.splice(i, 1);
     await course.save();
 
     res.status(200).json({
