@@ -17,6 +17,7 @@ import { paystackWebhook } from "./controllers/payment.controller.js";
 import chatRoutes from "./routes/chat.route.js";
 import profileRouter from "./routes/profile.route.js";
 import instructorsRoute from "./routes/instructors.route.js";
+import enrolledCoursesRouter from "./routes/enrolledCourses.route.js";
 
 
 dotenv.config();
@@ -77,6 +78,7 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/payments', paymentRouter);
 app.use('/api/profile', profileRouter); //
 app.use('/api/instructors', instructorsRoute); //
+app.use('/api/enrolled-courses', enrolledCoursesRouter); 
 
 const PORT = process.env.PORT;
 
