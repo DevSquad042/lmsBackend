@@ -18,6 +18,7 @@ import chatRoutes from "./routes/chat.route.js";
 import profileRouter from "./routes/profile.route.js";
 import instructorsRoute from "./routes/instructors.route.js";
 import enrolledCoursesRouter from "./routes/enrolledCourses.route.js";
+import searchCoursesRoute from "./routes/searchCourses.routes.js";
 
 
 dotenv.config();
@@ -79,6 +80,7 @@ app.use('/api/payments', paymentRouter);
 app.use('/api/profile', profileRouter); //
 app.use('/api/instructors', instructorsRoute); //
 app.use('/api/enrolled-courses', enrolledCoursesRouter); 
+app.use('/api/search', searchCoursesRoute); //
 
 const PORT = process.env.PORT;
 
