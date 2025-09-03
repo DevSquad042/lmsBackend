@@ -2,6 +2,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
+// Create folder if not exists
 const createFolder = (folderPath) => {
   if (!fs.existsSync(folderPath)) {
     fs.mkdirSync(folderPath, { recursive: true });
@@ -23,21 +24,17 @@ const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     const ext = path.extname(file.originalname).toLowerCase();
 
-    // ✅ handle chat uploads by extension
     if (/\.(jpeg|jpg|png|gif)$/i.test(ext)) {
       cb(null, "uploads/chat/images");
     } else if (/\.(mp3|wav|m4a|ogg)$/i.test(ext)) {
       cb(null, "uploads/chat/audio");
     } else if (/\.(pdf|doc|docx|txt)$/i.test(ext)) {
       cb(null, "uploads/chat/docs");
-    }
-    // ✅ handle normal uploads by fieldname
-    else if (file.fieldname === "thumbnail") {
+    } else if (file.fieldname === "thumbnail") {
       cb(null, "uploads/thumbnails");
     } else if (file.fieldname.startsWith("video")) {
       cb(null, "uploads/videos");
     } else if (file.fieldname.startsWith("pdf") || ext === ".pdf") {
-      // 👈 added ext === ".pdf" check to always send PDFs here
       cb(null, "uploads/pdfs");
     } else {
       cb(null, "uploads/others");
@@ -56,7 +53,7 @@ const fileFilter = (req, file, cb) => {
 
   if (/\.(jpeg|jpg|png|gif)$/i.test(ext)) cb(null, true);
   else if (/\.(mp4|mov|avi|mkv)$/i.test(ext)) cb(null, true);
-  else if (/\.(pdf|doc|docx|txt)$/i.test(ext)) cb(null, true); // ✅ allows pdf/docs
+  else if (/\.(pdf|doc|docx|txt)$/i.test(ext)) cb(null, true);
   else if (/\.(mp3|wav|m4a|ogg)$/i.test(ext)) cb(null, true);
   else cb(new Error("Unsupported file type"), false);
 };
@@ -66,5 +63,33 @@ const limits = {
 };
 
 const upload = multer({ storage, fileFilter, limits });
+
+// ✅ Middleware wrapper to add file URL
+export const uploadWithUrl = (fields) => {
+  return (req, res, next) => {
+    upload.fields(fields)(req, res, (err) => {
+      if (err) return next(err);
+
+      if (req.files) {
+        Object.keys(req.files).forEach((key) => {
+          req.files[key] = req.files[key].map((file) => {
+            const baseUrl = `${req.protocol}://${req.get("host")}`;
+            return {
+              ...file,
+              url: `${baseUrl}/uploads/${file.filename}`,
+            };
+          });
+        });
+      }
+
+      if (req.file) {
+        const baseUrl = `${req.protocol}://${req.get("host")}`;
+        req.file.url = `${baseUrl}/uploads/${req.file.filename}`;
+      }
+
+      next();
+    });
+  };
+};
 
 export default upload;
