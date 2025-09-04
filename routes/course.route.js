@@ -1,41 +1,26 @@
 import express from 'express';
-import upload from '../middlewares/uploads.middlewares.js';
+import { uploadWithUrl } from '../middlewares/uploads.middlewares.js';
 import * as courseController from '../controllers/course.controller.js';
 
 const router = express.Router();
 
-// ✅ Create course with thumbnail, videos, PDFs
-router.post(
-  '/',
-  upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
-    { name: 'video-0', maxCount: 1 },
-    { name: 'video-1', maxCount: 1 }, // add more if needed
-    { name: 'pdf-0', maxCount: 1 },
-    { name: 'pdf-1', maxCount: 1 },   // add more if needed
-  ]),
-  courseController.createCourse
-);
+// ✅ Upload middlewares
+const courseUpload = uploadWithUrl([{ name: 'thumbnail', maxCount: 1 }]);
+const sectionUpload = uploadWithUrl([
+  { name: 'video', maxCount: 1 },
+  { name: 'pdf', maxCount: 1 },
+]);
 
-// ✅ Section routes
-router.post(
-  '/:courseId/sections',
-  upload.fields([
-    { name: 'video', maxCount: 1 },
-    { name: 'pdf', maxCount: 1 },
-  ]),
-  courseController.addSection
-);
+// ✅ Create course with thumbnail
+router.post('/', courseUpload, courseController.createCourse);
 
-router.put(
-  '/:courseId/sections/:index',
-  upload.fields([
-    { name: 'video', maxCount: 1 },
-    { name: 'pdf', maxCount: 1 },
-  ]),
-  courseController.updateSection
-);
+// ✅ Add a new section with video/pdf
+router.post('/:courseId/sections', sectionUpload, courseController.addSection);
 
+// ✅ Update section
+router.put('/:courseId/sections/:index', sectionUpload, courseController.updateSection);
+
+// ✅ Remove section
 router.delete('/:courseId/sections/:index', courseController.removeSection);
 
 // ✅ Course routes
@@ -44,14 +29,13 @@ router.get('/search', courseController.searchCourses);
 router.get('/name/:title', courseController.getCourseByTitle);
 router.get('/:id', courseController.getCourseById);
 
-router.put(
-  '/:id',
-  upload.fields([
-    { name: 'thumbnail', maxCount: 1 },
-  ]),
-  courseController.updateCourse
-);
+// ✅ Course preview route
+router.get('/:id/preview', courseController.getCoursePreview);
 
+// ✅ Update course (with optional thumbnail update)
+router.put('/:id', courseUpload, courseController.updateCourse);
+
+// ✅ Delete course
 router.delete('/:id', courseController.deleteCourse);
 
 export default router;

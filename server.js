@@ -17,6 +17,8 @@ import { paystackWebhook } from "./controllers/payment.controller.js";
 import chatRoutes from "./routes/chat.route.js";
 import profileRouter from "./routes/profile.route.js";
 import instructorsRoute from "./routes/instructors.route.js";
+import enrolledCoursesRouter from "./routes/enrolledCourses.route.js";
+import searchCoursesRoute from "./routes/searchCourses.routes.js";
 
 
 dotenv.config();
@@ -29,12 +31,24 @@ const limiter = rateLimit({
 });
 
 
+const allowedOrigins = [
+  process.env.CLIENT_URL, 
+  "https://byway-learning.netlify.app/"
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL, 
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
   })
 );
+
 
 app.post(
   "/api/payments/webhook",
@@ -65,6 +79,8 @@ app.use('/api/chats', chatRoutes);
 app.use('/api/payments', paymentRouter);
 app.use('/api/profile', profileRouter); //
 app.use('/api/instructors', instructorsRoute); //
+app.use('/api/enrolled-courses', enrolledCoursesRouter); 
+app.use('/api/search', searchCoursesRoute); //
 
 const PORT = process.env.PORT;
 
