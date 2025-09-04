@@ -33,7 +33,7 @@ const limiter = rateLimit({
 
 const allowedOrigins = [
   process.env.CLIENT_URL, 
-  "https://byway-learning.netlify.app/"
+  "https://byway02.netlify.app"
 ];
 
 app.use(
