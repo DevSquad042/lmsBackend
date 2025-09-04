@@ -34,7 +34,7 @@ const limiter = rateLimit({
 
 const allowedOrigins = [
   process.env.CLIENT_URL, 
-  "https://byway1.netlify.app/"
+  "https://byway1.netlify.app"
 ];
 
 app.use(
