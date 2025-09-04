@@ -18,8 +18,8 @@ export const createReview = async (req, res) => {
     // console.log("Request params:", { id, targetId, type, userId, rating, comment });
 
     // Validate type
-    if (!type || !["Course", "instructor"].includes(type)) {
-      return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
+    if (!type || !["Course", "instructor", "user"].includes(type)) {
+      return res.status(400).json({ message: "Query parameter 'type' must be 'course', 'instructor', or 'user'" });
     }
 
     // Validate required fields
@@ -48,32 +48,36 @@ export const createReview = async (req, res) => {
       if (!course) {
         return res.status(404).json({ error: "Course not found" });
       }
-    } else {
+    } else if (type === "instructor") {
       console.log("Checking instructorId:", targetId);
       targetType = "instructor";
-      const instructor = await User.findById(targetId);
-      if (!instructor) {
-        return res.status(404).json({ error: "Instructor not found" });
+      const user = await User.findById(targetId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
       }
-      if (instructor.role !== "instructor") {
-        return res.status(403).json({ message: "Target user is not an instructor" });
+    } else if (type === "user") {
+      console.log("Checking userId:", targetId);
+      targetType = "user";
+      const user = await User.findById(targetId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
       }
     }
-     const existingReviews = await Review.find({targetType});
+     const existingReviews = await Review.find({ targetId, targetType });
     console.log('Existing reviews:', existingReviews);
 
     // Count how many reviews the user already has for this target
 
-    const reviewCount = await Review.countDocuments({ targetType });
+    const reviewCount = await Review.countDocuments({ targetId, targetType });
 
-    if (reviewCount >= 10) {
+    if (reviewCount >= 5) {
       return res.status(400).json({
-        message: "You have already reviewed this course twice....haba now!!."
+        message: "You have already reviewed this target 5 times."
       });
     }
 
   // Count total reviews for this target (for response)
-    const totalRatings = await Review.countDocuments({ targetType });
+    const totalRatings = await Review.countDocuments({ targetId, targetType });
     // console.log('Total reviews for target:', totalRatings);----- This is to debug
 
 
@@ -115,10 +119,10 @@ export const getAllReviews = async (req, res) => {
     const { targetId } = req.params; // targetId is courseId or instructorId
     const { type } = req.query; // ?type=course or ?type=instructor
 
-    // Validate type
-    if (!type || !['Course', 'instructor'].includes(type)) {
-      return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
-    }
+  //  // Validate type
+  //   if (!type || !['Course', 'instructor', 'user'].includes(type)) {
+  //     return res.status(400).json({ message: "Query parameter 'type' must be 'course', 'instructor', or 'user'" });
+  //   }
 
     // Validate targetId
     if (!mongoose.Types.ObjectId.isValid(targetId)) {
@@ -132,18 +136,22 @@ export const getAllReviews = async (req, res) => {
         return res.status(404).json({ error: 'Course not found' });
       }
     } else {
-      const instructor = await User.findById(targetId);
-      if (!instructor) {
-        return res.status(404).json({ error: 'Instructor not found' });
-      }
-      if (instructor.role !== 'instructor') {
-        return res.status(403).json({ message: 'Target user is not an instructor' });
+      const user = await User.findById(targetId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
       }
     }
 
     // Fetch all reviews for the target
-    const reviews = await Review.find({ targetType: type })
-    .populate('targetType', 'userName email') // Populate user details (adjust fields as needed)
+    let query;
+    if (type === 'Course') {
+      query = { targetId, targetType: type };
+    } else {
+      // For users, get reviews given by the user
+      query = { userId: targetId };
+    }
+    const reviews = await Review.find(query)
+    .populate('userId', 'userName email') // Populate reviewer details
     .select('rating comment createdAt')
     .sort({ createdAt: -1 }) // Select relevant fields
 
@@ -163,6 +171,32 @@ export const getAllReviews = async (req, res) => {
   }
 };
 
+export const userReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ userId: req.params.id })
+      .populate('courseId', 'title') // Populate course title
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      status: 'success',
+      count: reviews.length,
+      data: {
+        reviews: reviews.map(review => ({
+          _id: review._id,
+          userId: review.userId,
+          courseId: review.courseId._id,
+          courseTitle: review.courseId.title, // Include course title
+          rating: review.rating,
+          comment: review.comment,
+          createdAt: review.createdAt
+        }))
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching reviews', error: error.message });
+  }
+};
+
 
 
 //GET AVERAGE|| Get average rating for a specific course or instructor
@@ -173,8 +207,8 @@ export const getAverageRating = async (req, res) => {
     const { type } = req.query;
 
     // Validate type
-    if (!type || !['Course', 'instructor'].includes(type)) {
-      return res.status(400).json({ message: "Query parameter 'type' must be 'course' or 'instructor'" });
+    if (!type || !['Course', 'instructor', 'user'].includes(type)) {
+      return res.status(400).json({ message: "Query parameter 'type' must be 'course', 'instructor', or 'user'" });
     }
 
     // Validate targetId
@@ -189,18 +223,22 @@ export const getAverageRating = async (req, res) => {
         return res.status(404).json({ error: 'Course not found' });
       }
     } else {
-      const instructor = await User.findById(targetId);
-      if (!instructor) {
-        return res.status(404).json({ error: 'Instructor not found' });
-      }
-      if (instructor.role !== 'instructor') {
-        return res.status(403).json({ message: 'Target user is not an instructor' });
+      const user = await User.findById(targetId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
       }
     }
 
     // Calculate average rating and total reviews
+    let matchQuery;
+    if (type === 'Course') {
+      matchQuery = { targetId, targetType: type };
+    } else {
+      // For users, get reviews given by the user
+      matchQuery = { userId: targetId };
+    }
     const result = await Review.aggregate([
-      { $match: { targetType: type } },
+      { $match: matchQuery },
       {
         $group: {
           _id: null,

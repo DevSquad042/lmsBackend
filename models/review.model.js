@@ -23,7 +23,7 @@ const reviewSchema = new mongoose.Schema({
     targetType: {
     type: String,
     required: true,
-    enum: ['instructor', 'Course']
+    enum: ['instructor', 'Course', 'User']
   },
 
     rating: { 

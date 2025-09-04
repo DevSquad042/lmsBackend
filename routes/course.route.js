@@ -40,6 +40,7 @@ router.delete('/:courseId/sections/:index', courseController.removeSection);
 
 // ✅ Course routes
 router.get('/', courseController.getAllCourses);
+router.get('/search', courseController.searchCourses);
 router.get('/name/:title', courseController.getCourseByTitle);
 router.get('/:id', courseController.getCourseById);
 
