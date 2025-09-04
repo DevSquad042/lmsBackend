@@ -9,7 +9,9 @@ const orderSchema = new mongoose.Schema({
         }
     ],
     totalAmount: { type: Number, required: true },
-    paymentStatus: { type: String, enum: ['Paid', 'Failed'], default: 'Paid' },
+    paymentStatus: { type: String, enum: ['Pending','Paid', 'Failed'], default: 'Pending' },
+    tx_ref: { type: String, unique: true } // <-- important
 }, { timestamps: true });
 
 export default mongoose.model('Order', orderSchema);
+
