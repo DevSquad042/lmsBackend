@@ -6,15 +6,16 @@ import Enrollment from "../models/enrollment.model.js";
 
 export const getAllInstructors = async (req, res) => {
   try {
-    // 1. Find all instructors
-    const instructors = await User.find({ role: "instructor" })
-      .populate("profile") // attach profile info
-      .lean(); // convert to plain JS objects
+    //  Find all instructors
+    const instructors = await User.find({ role: "instructor" }).lean();
 
-    // 2. For each instructor, get reviews, ratings, and student count
+    //  Enrich each instructor
     const enriched = await Promise.all(
       instructors.map(async (inst) => {
-        // Reviews targeted at this instructor
+        // Find profile linked by userId
+        const profile = await Profile.findOne({ userId: inst._id }).lean();
+
+        // Reviews for this instructor
         const reviews = await Review.find({ targetType: "instructor", userId: inst._id }).lean();
         const avgRating =
           reviews.length > 0
@@ -24,17 +25,17 @@ export const getAllInstructors = async (req, res) => {
         // Courses created by this instructor
         const courses = await Course.find({ instructor: inst._id }).select("_id").lean();
 
-        // Count enrollments across all their courses
+        // Count enrollments
         const courseIds = courses.map((c) => c._id);
         const studentCount = await Enrollment.countDocuments({ course: { $in: courseIds } });
 
         return {
           ...inst,
-          profile: inst.profile || {},
+          profile: profile || {},   // now real profile comes here
           avgRating,
           totalReviews: reviews.length,
           reviews,
-          studentCount, //  number of students this instructor has
+          studentCount,
         };
       })
     );
@@ -45,3 +46,4 @@ export const getAllInstructors = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
