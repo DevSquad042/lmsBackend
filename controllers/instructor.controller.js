@@ -1,40 +1,40 @@
 import User from "../models/users.model.js";
 import Profile from "../models/profile.model.js";
 import Review from "../models/review.model.js";
+import Course from "../models/course.model.js";
+import Enrollment from "../models/enrollment.model.js";
 
 export const getAllInstructors = async (req, res) => {
   try {
-    // Get all instructors
+    // 1. Find all instructors
     const instructors = await User.find({ role: "instructor" })
-      .select("firstName lastName email role")
-      .lean();
+      .populate("profile") // attach profile info
+      .lean(); // convert to plain JS objects
 
-    // Enrich with profile + ratings
+    // 2. For each instructor, get reviews, ratings, and student count
     const enriched = await Promise.all(
       instructors.map(async (inst) => {
-        // Populate profile
-        const profile = await Profile.findOne({ userId: inst._id }).lean();
+        // Reviews targeted at this instructor
+        const reviews = await Review.find({ targetType: "instructor", userId: inst._id }).lean();
+        const avgRating =
+          reviews.length > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+            : 0;
 
-        // Get reviews where targetType = instructor
-        const reviews = await Review.find({
-          targetType: "instructor",
-          courseId: { $exists: false }, // ensures it's not course-specific
-          userId: inst._id,
-        }).lean();
+        // Courses created by this instructor
+        const courses = await Course.find({ instructor: inst._id }).select("_id").lean();
 
-        // Calculate average rating
-        let avgRating = 0;
-        if (reviews.length > 0) {
-          const total = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
-          avgRating = total / reviews.length;
-        }
+        // Count enrollments across all their courses
+        const courseIds = courses.map((c) => c._id);
+        const studentCount = await Enrollment.countDocuments({ course: { $in: courseIds } });
 
         return {
           ...inst,
-          profile,
-          avgRating: Number(avgRating.toFixed(1)),
+          profile: inst.profile || {},
+          avgRating,
           totalReviews: reviews.length,
-          reviews, // optional: include full review objects
+          reviews,
+          studentCount, //  number of students this instructor has
         };
       })
     );
