@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema({
         enum: ["admin", "instructor", "user"],
         default: "user"
     },
+    profile: { type: mongoose.Schema.Types.ObjectId, ref: "Profile" },
     verified:{
         type: Boolean,
         default: false
