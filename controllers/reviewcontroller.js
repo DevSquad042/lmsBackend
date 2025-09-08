@@ -230,3 +230,61 @@ export const getAverageRating = async (req, res) => {
     res.status(500).json({ error: 'Server error while calculating average rating', details: error.message });
   }
 };
+
+
+export const getCourseAverageRating = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    console.log('getCourseAverageRating called with courseId:', courseId);
+
+    // Validate courseId
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      console.log('Invalid courseId:', courseId);
+      return res.status(400).json({ error: 'Invalid course ID' });
+    }
+
+    // Verify course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // Calculate average rating and total reviews for the course
+    const matchQuery = { targetId: new mongoose.Types.ObjectId(courseId), targetType: 'Course' };
+    console.log('Match query:', matchQuery);
+
+    // Debug: Check how many documents match
+    const documentCount = await Review.countDocuments(matchQuery);
+    console.log('Documents matching query:', documentCount);
+
+    const result = await Review.aggregate([
+      { $match: matchQuery },
+      {
+        $group: {
+          _id: null,
+          averageRating: { $avg: '$rating' },
+          totalReviews: { $sum: 1 },
+          totalRatingSum: { $sum: '$rating' },
+        },
+      },
+    ]);
+    console.log('Aggregation result:', result);
+
+    const averageRating = result.length > 0 ? result[0].averageRating : 0;
+    const totalReviews = result.length > 0 ? result[0].totalReviews : 0;
+    const totalRatingSum = result.length > 0 ? result[0].totalRatingSum : 0;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        courseId,
+        averageRating: averageRating ? Number(averageRating.toFixed(2)) : 0,
+        totalReviews,
+        totalRatingSum,
+      },
+    });
+  } catch (error) {
+    console.error('Error in getCourseAverageRating:', error);
+    res.status(500).json({ error: 'Server error while calculating course average rating', details: error.message });
+  }
+};
