@@ -1,6 +1,6 @@
 import express from 'express';
 import { verifyToken } from '../middlewares/verifyToken.middleware.js';
-import { createReview, getAllReviews, getAverageRating, getCourseAverageRating, userReviews } from '../controllers/reviewcontroller.js';
+import { createReview, getAllReviews, getAverageRating, getCourseAverageRating, userReviews, getCourseReviews } from '../controllers/reviewcontroller.js';
 
 
 
@@ -22,6 +22,9 @@ reviewRouter.get('/average/:targetId', getAverageRating )
 
 //get course average ratings separately
 reviewRouter.get('/courseAverage/:courseId', getCourseAverageRating)
+
+//get all reviews for a course with structured data
+reviewRouter.get('/courseReviews/:courseId', getCourseReviews)
 
 
 

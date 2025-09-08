@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Review from "../models/review.model.js";
 import User from "../models/users.model.js";
 import Course from "../models/course.model.js";
+import Enrollment from "../models/enrollment.model.js";
 
 
 
@@ -48,7 +49,13 @@ export const createReview = async (req, res) => {
       if (!course) {
         return res.status(404).json({ error: "Course not found" });
       }
-    } else if (type === "instructor") {
+      // Check if user is enrolled in the course
+      const enrollment = await Enrollment.findOne({ user: userId, course: targetId });
+      if (!enrollment) {
+        return res.status(403).json({ message: "You must be enrolled in this course to leave a review." });
+      }
+    }
+    else if (type === "instructor") {
       console.log("Checking instructorId:", targetId);
       targetType = "instructor";
       const user = await User.findById(targetId);
@@ -364,5 +371,58 @@ export const getCourseAverageRating = async (req, res) => {
   } catch (error) {
     console.error('Error in getCourseAverageRating:', error);
     res.status(500).json({ error: 'Server error while calculating course average rating', details: error.message });
+  }
+};
+
+// Fetch all reviews for a course with deconstructed fields
+export const getCourseReviews = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    console.log('getCourseReviews called with courseId:', courseId);
+
+    // Validate courseId
+    if (!mongoose.Types.ObjectId.isValid(courseId)) {
+      return res.status(400).json({ error: 'Invalid course ID' });
+    }
+
+    // Verify course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // Fetch all reviews for the course
+    const reviews = await Review.find({ targetId: courseId, targetType: 'Course' })
+      .populate('userId', 'userName email')
+      .select('rating comment createdAt')
+      .sort({ createdAt: -1 });
+
+    // Deconstruct and structure the reviews
+    const structuredReviews = reviews.map(review => {
+      const createdAt = new Date(review.createdAt);
+      return {
+        id: review._id,
+        userName: review.userId ? review.userId.userName : 'Anonymous',
+        userEmail: review.userId ? review.userId.email : '',
+        rating: review.rating,
+        comment: review.comment || '',
+        date: createdAt.toISOString().split('T')[0], // YYYY-MM-DD
+        time: createdAt.toTimeString().split(' ')[0], // HH:MM:SS
+        fullDateTime: createdAt.toISOString()
+      };
+    });
+
+    res.set('Cache-Control', 'no-cache');
+    res.status(200).json({
+      status: 'success',
+      count: structuredReviews.length,
+      data: {
+        courseId,
+        reviews: structuredReviews
+      }
+    });
+  } catch (error) {
+    console.error('Error in getCourseReviews:', error);
+    res.status(500).json({ error: 'Server error while fetching course reviews', details: error.message });
   }
 };
