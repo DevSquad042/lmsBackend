@@ -43,6 +43,7 @@ const reviewSchema = new mongoose.Schema({
         type: String, 
         required: true 
     },
+    targetId: { type: mongoose.Schema.Types.ObjectId, required: true },
 
 
 }, { timestamps: true });
