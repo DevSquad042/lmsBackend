@@ -1,6 +1,8 @@
 import express from 'express';
 import { uploadWithUrl } from '../middlewares/uploads.middlewares.js';
 import * as courseController from '../controllers/course.controller.js';
+import { verifyToken } from '../middlewares/verifyToken.middleware.js';
+import { enrolledCourses } from '../controllers/enrolledCourses.controller.js';
 
 const router = express.Router();
 
@@ -25,6 +27,8 @@ router.delete('/:courseId/sections/:index', courseController.removeSection);
 
 // ✅ Course routes
 router.get('/', courseController.getAllCourses);
+router.get('/enrolled/:id', verifyToken, enrolledCourses);
+router.get('/search', courseController.searchCourses);
 router.get('/name/:title', courseController.getCourseByTitle);
 router.get('/:id', courseController.getCourseById);
 

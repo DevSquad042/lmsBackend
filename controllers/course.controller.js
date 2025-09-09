@@ -226,6 +226,52 @@ export const getCourseByTitle = async (req, res) => {
   }
 };
 
+// Search courses
+export const searchCourses = async (req, res) => {
+  try {
+    const { q } = req.query;
+
+    if (!q || typeof q !== 'string' || q.trim() === '') {
+      return res.status(400).json({
+        message: 'Search query is required',
+        error: 'Missing or invalid search parameter'
+      });
+    }
+
+    const searchQuery = q.trim();
+
+    // Search in multiple fields using regex (case-insensitive)
+    const courses = await Course.find({
+      $or: [
+        { title: { $regex: searchQuery, $options: 'i' } },
+        { description: { $regex: searchQuery, $options: 'i' } },
+        { instructor: { $regex: searchQuery, $options: 'i' } },
+        { categories: { $in: [new RegExp(searchQuery, 'i')] } },
+        { tags: { $in: [new RegExp(searchQuery, 'i')] } }
+      ]
+    })
+    .limit(50) // Limit results for performance
+    .sort({ createdAt: -1 }); // Sort by newest first
+
+    // Apply discount to each course
+    const coursesWithDiscount = courses.map(course => applyDiscount(course.toObject()));
+
+    console.log(`Search for "${searchQuery}" returned ${coursesWithDiscount.length} results`);
+
+    res.json({
+      status: 'success',
+      count: coursesWithDiscount.length,
+      data: coursesWithDiscount
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({
+      message: 'Failed to retrieve courses',
+      error: error.message
+    });
+  }
+};
+
 // ✅ Update course (thumbnail -> full URL if provided)
 export const updateCourse = async (req, res) => {
   try {
