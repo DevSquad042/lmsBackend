@@ -58,12 +58,14 @@ export const updateProfile = async (req, res, next) => {
     // Upload new profile picture if provided
     let profilePicture, profilePictureId;
     if (req.file) {
+      console.log("Uploading profile picture to Cloudinary...");
       const result = await uploadToCloudinary(
         req.file.buffer,
         "profile_pictures"
       );
       profilePicture = result.secure_url;
       profilePictureId = result.public_id; // save public_id for deletion
+      console.log("Profile picture uploaded successfully:", profilePicture);
     }
 
     // Build update object dynamically
@@ -86,6 +88,7 @@ export const updateProfile = async (req, res, next) => {
       { $set: updateFields },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+    console.log("Profile updated in DB:", profile.profilePicture);
 
     res.json({ message: "Profile updated successfully", 
       firstName: firstName || req.user.firstName,
@@ -112,6 +115,7 @@ export const getProfile = async (req, res, next) => {
     const userId = req.user.id;
 
     const profile = await Profile.findOne({ userId }).populate("userId", "firstName lastName email");
+    console.log("Fetched profile for user", userId, ":", profile ? profile.profilePicture : "No profile found");
 
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });

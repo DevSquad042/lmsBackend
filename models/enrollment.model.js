@@ -4,7 +4,7 @@ const enrollmentSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
     enrolledAt: { type: Date, default: Date.now },
-    paymentreference: { type: String, unique: true ,required: true },
+    paymentreference: { type: String },
     amount: Number,
 }, { timestamps: true });
 

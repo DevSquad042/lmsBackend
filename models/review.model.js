@@ -23,7 +23,7 @@ const reviewSchema = new mongoose.Schema({
     targetType: {
     type: String,
     required: true,
-    enum: ['instructor', 'Course']
+    enum: ['instructor', 'Course', 'User']
   },
 
     rating: { 
@@ -43,6 +43,7 @@ const reviewSchema = new mongoose.Schema({
         type: String, 
         required: true 
     },
+    targetId: { type: mongoose.Schema.Types.ObjectId, required: true },
 
 
 }, { timestamps: true });

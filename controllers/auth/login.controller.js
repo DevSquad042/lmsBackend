@@ -5,6 +5,10 @@ import User from "../../models/users.model.js";
 export const login = async (req, res) => {
     const { email, userName, password } = req.body;
 
+    // Trim and lowercase inputs
+    let trimmedEmail = email ? email.trim().toLowerCase() : null;
+    let trimmedUserName = userName ? userName.trim().toLowerCase() : null;
+
     if (!email && !userName) {
         return res.status(400).json({ message: "Email or Username is required" });
     }
@@ -13,8 +17,13 @@ export const login = async (req, res) => {
     }
 
     try {
+        // Build query conditions
+        const queryConditions = [];
+        if (trimmedEmail) queryConditions.push({ email: trimmedEmail });
+        if (trimmedUserName) queryConditions.push({ userName: trimmedUserName });
+
         // Find user by email or username
-        const user = await User.findOne({ $or: [{ email }, { userName }] });
+        const user = await User.findOne({ $or: queryConditions });
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
