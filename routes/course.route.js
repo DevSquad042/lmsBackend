@@ -1,22 +1,44 @@
 import express from 'express';
-import upload from '../middlewares/uploads.middlewares.js';
+import { uploadWithUrl } from '../middlewares/uploads.middlewares.js';
 import * as courseController from '../controllers/course.controller.js';
+import { verifyToken } from '../middlewares/verifyToken.middleware.js';
+import { enrolledCourses } from '../controllers/enrolledCourses.controller.js';
 
 const router = express.Router();
 
-// Create course with thumbnail, videos, PDFs
-router.post('/', upload, courseController.createCourse);
+// ✅ Upload middlewares
+const courseUpload = uploadWithUrl([{ name: 'thumbnail', maxCount: 1 }]);
+const sectionUpload = uploadWithUrl([
+  { name: 'video', maxCount: 1 },
+  { name: 'pdf', maxCount: 1 },
+]);
 
-// Section routes
-router.post('/:courseId/sections', upload, courseController.addSection);
+// ✅ Create course with thumbnail
+router.post('/', courseUpload, courseController.createCourse);
+
+// ✅ Add a new section with video/pdf
+router.post('/:courseId/sections', sectionUpload, courseController.addSection);
+
+// ✅ Update section
+router.put('/:courseId/sections/:index', sectionUpload, courseController.updateSection);
+
+// ✅ Remove section
 router.delete('/:courseId/sections/:index', courseController.removeSection);
-router.put('/:courseId/sections/:index', upload, courseController.updateSection);
 
-// Course routes
+// ✅ Course routes
 router.get('/', courseController.getAllCourses);
+router.get('/enrolled/:id', verifyToken, enrolledCourses);
+router.get('/search', courseController.searchCourses);
 router.get('/name/:title', courseController.getCourseByTitle);
 router.get('/:id', courseController.getCourseById);
-router.put('/:id', upload, courseController.updateCourse);
+
+// ✅ Course preview route
+router.get('/:id/preview', courseController.getCoursePreview);
+
+// ✅ Update course (with optional thumbnail update)
+router.put('/:id', courseUpload, courseController.updateCourse);
+
+// ✅ Delete course
 router.delete('/:id', courseController.deleteCourse);
 
 export default router;

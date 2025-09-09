@@ -18,12 +18,14 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
+        lowercase: true,
         unique: true
     },
     userName: {
         type: String,
         required: true,
         trim: true,
+        lowercase: true,
         unique: true,
     },
     password: {
@@ -38,6 +40,7 @@ const userSchema = new mongoose.Schema({
         enum: ["admin", "instructor", "user"],
         default: "user"
     },
+    profile: { type: mongoose.Schema.Types.ObjectId, ref: "Profile" },
     verified:{
         type: Boolean,
         default: false
@@ -50,6 +53,11 @@ const userSchema = new mongoose.Schema({
         type: String,
     },
     resetTokenExpires: Date,
+    githubId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
 
 
 }, {timestamps: true})

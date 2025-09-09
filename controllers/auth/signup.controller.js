@@ -7,26 +7,30 @@ export const signup = async (req, res) => {
 
     const { firstName, lastName, userName, email, password } = req.body;
 
+    // Trim and lowercase inputs
+    let trimmedEmail = email ? email.trim().toLowerCase() : "";
+    let trimmedUserName = userName ? userName.trim().toLowerCase() : "";
+
     // Check if all required fields are provided
-    if (!firstName || !lastName || !userName || !email || !password) {
+    if (!firstName || !lastName || !trimmedUserName || !trimmedEmail || !password) {
         return res.status(400).json({ message: "All fields are required" });
 
     }
 
     //validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(trimmedEmail)) {
         return res.status(400).json({ message: "Please provide a valid email address." });
     }
 
     try {
-        const existingEmail = await User.findOne({ email });
+        const existingEmail = await User.findOne({ email: new RegExp('^' + trimmedEmail + '$', 'i') });
         if (existingEmail) {
             return res.status(409).json({ message: "Email already in use" });
         }
 
         // Check if username already exists
-        const existingUsername = await User.findOne({ userName });
+        const existingUsername = await User.findOne({ userName: new RegExp('^' + trimmedUserName + '$', 'i') });
         if (existingUsername) {
             return res.status(409).json({ message: "Username already taken" });
         }
@@ -34,44 +38,40 @@ export const signup = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        const verificationToken = crypto.randomBytes(32).toString("hex");
-        const verificationExpires = Date.now() + 1000 * 60 * 60;
-
         const user = new User({
             firstName,
             lastName,
-            email,
-            userName,
+            email: trimmedEmail,
+            userName: trimmedUserName,
             password: hashedPassword,
-            verified: false,
-            verificationToken,
-            verificationExpires
+            verified: false, // Disabled email verification
         })
 
 
         const savedUser = await user.save();
 
-        //send email
-
-        const verificationLink = `http://localhost:3000/api/auth/verify-email?token=${verificationToken}`;
-        const html = `
-      <h2>Hello ${firstName},</h2>
-      <p>Please verify your email by clicking the link below:</p>
-      <a href="${verificationLink}">Verify Email</a>
-    `;
-
-        await sendEmail(email, "Verify your email", html);
-        console.log(" Email sent to", email);
+        // Email verification disabled - no email sent
 
         const userObj = savedUser.toObject();
-        const { password: _, __v, verificationToken: __, verificationTokenExpires: ___, ...others } = userObj;
+        const { password: _, __v, ...others } = userObj;
 
         return res.status(201).json({
-            message: "User registered successfully. Please check your email to verify your account.",
+            message: "User registered successfully.",
             user: others,
         });
     } catch (error) {
         console.error("Error registering user:", error);
+
+        // // Handle MongoDB duplicate key errors
+        // if (error.code === 11000) {
+        //     const field = Object.keys(error.keyValue)[0];
+        //     if (field === 'email') {
+        //         return res.status(409).json({ message: "Email already in use" });
+        //     } else if (field === 'userName') {
+        //         return res.status(409).json({ message: "Username already taken" });
+        //     }
+        // }
+
         return res.status(500).json({ message: "Internal server error" });
     }
 };

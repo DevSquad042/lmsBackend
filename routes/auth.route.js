@@ -7,6 +7,7 @@ import { logout } from "../controllers/auth/logout.controller.js";
 import { forgotPassword } from "../controllers/auth/forgotPassword.controller.js";
 import { resetPassword } from "../controllers/auth/resetPassword.controller.js";
 import { googleAuth } from "../controllers/auth/goggleAuth.controller.js";
+import { githubAuth } from "../controllers/auth/githubAuth.controller.js";
 
 
 authRouter.post("/signup", signup);
@@ -16,6 +17,7 @@ authRouter.post("/logout", logout);
 authRouter.post("/forgot-password", forgotPassword);
 authRouter.post("/reset-password", resetPassword)
 authRouter.post("/goggle/callback", googleAuth);
+authRouter.post("/github/callback", githubAuth);
 
 
 export default authRouter;
