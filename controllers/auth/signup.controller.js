@@ -80,7 +80,6 @@ export const signup = async (req, res) => {
             user: others,
         });
 
-        return res.status(500).json({ message: "Internal server error" });
     }
     catch(err){
         console.error("server error during signup:", err);
