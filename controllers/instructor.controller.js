@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import User from "../models/users.model.js"
 import Course from "../models/course.model.js"
+import Profile from "../models/profile.model.js";
+import Review from "../models/review.model.js";
+import Enrollment from "../models/enrollment.model.js";
 
  export const getAllInstructors = async (req, res) => {
   try {

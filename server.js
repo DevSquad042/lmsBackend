@@ -20,6 +20,7 @@ import instructorsRoute from "./routes/instructors.route.js";
 import enrolledCoursesRouter from "./routes/enrolledCourses.route.js";
 import searchCoursesRoute from "./routes/searchCourses.routes.js";
 import progressRouter from "./routes/progress.route.js";
+import flutterwaveRouter from "./routes/flutterwave.routes.js";
 
 
 dotenv.config();
@@ -83,6 +84,8 @@ app.use('/api/instructors', instructorsRoute); //
 app.use('/api/enrolled-courses', enrolledCoursesRouter);
 app.use('/api/search', searchCoursesRoute); //
 app.use('/api/progress', progressRouter);
+app.use('/api/flutterwave', flutterwaveRouter)
+app.use('/api/instructors', instructorsRoute);
 
 const PORT = process.env.PORT;
 
