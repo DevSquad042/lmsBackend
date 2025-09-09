@@ -24,7 +24,7 @@ export const verifyEmail = async (req, res) => {
 
     await user.save();
 
-    return res.status(200).json({ message: "Email verified successfully. You can now log in." });
+     return res.redirect("https://byway1.netlify.app/login");
   } catch (error) {
     console.error("Error verifying email:", error);
     return res.status(500).json({ message: "Internal server error." });
